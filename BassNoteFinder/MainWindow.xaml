@@ -53,6 +53,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="Input:" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -61,17 +62,27 @@
                           Background="#333" Foreground="White">
                 </ComboBox>
 
-                <Button Grid.Column="2" x:Name="ToggleMicBtn" Content="Start Mic"
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                    <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="#AAA" Margin="0,0,6,0"/>
+                    <Slider x:Name="ThresholdSlider" Width="110" Minimum="0.01" Maximum="0.25"
+                            SmallChange="0.01" LargeChange="0.02"
+                            TickFrequency="0.01" IsSnapToTickEnabled="False"
+                            ValueChanged="ThresholdSlider_ValueChanged"/>
+                    <TextBlock x:Name="ThresholdValueText" Width="40" Margin="8,0,0,0"
+                               VerticalAlignment="Center" Foreground="#CCC" TextAlignment="Right"/>
+                </StackPanel>
+
+                <Button Grid.Column="3" x:Name="ToggleMicBtn" Content="Start Mic"
                         Click="ToggleMic_Click" Margin="10,0"
                         Padding="10,6" Background="#0E639C" Foreground="White"
                         BorderThickness="0" Cursor="Hand"/>
 
-                <Button Grid.Column="3" x:Name="NewNoteBtn" Content="New Note"
+                <Button Grid.Column="4" x:Name="NewNoteBtn" Content="New Note"
                         Click="NewNote_Click" Margin="10,0"
                         Padding="10,6" Background="#2D8C2D" Foreground="White"
                         BorderThickness="0" Cursor="Hand"/>
 
-                <Border Grid.Column="4" BorderBrush="#555" BorderThickness="1" 
+                <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
                         CornerRadius="4" Padding="10,4" Margin="10,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Detected: " VerticalAlignment="Center" Foreground="#AAA"/>
@@ -80,7 +91,7 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
+                <Border Grid.Column="6" BorderBrush="#555" BorderThickness="1" 
                         CornerRadius="4" Padding="10,4">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Score: " VerticalAlignment="Center" Foreground="#AAA"/>

@@ -2,6 +2,7 @@ namespace BassNoteFinder.Audio;
 
 public class PitchDetector
 {
+    private const double MinConfidence = 0.70;
     private readonly int _sampleRate;
     private readonly int _bufferSize;
 
@@ -13,13 +14,13 @@ public class PitchDetector
 
     public double DetectPitch(float[] samples)
     {
-        var result = Yin(samples);
-        if (result <= 0) return -1;
+        var period = Yin(samples);
+        if (period <= 0) return -1;
 
-        var confidence = YinConfidence(samples, result);
-        if (confidence < 0.85) return -1;
+        var confidence = YinConfidence(samples, period);
+        if (confidence < MinConfidence) return -1;
 
-        return result;
+        return _sampleRate / period;
     }
 
     private double Yin(float[] samples)
@@ -54,7 +55,8 @@ public class PitchDetector
 
         if (tau < 0 && diff.Length > 0)
         {
-            for (int t = 1; t < diff.Length; t++)
+            tau = 1;
+            for (int t = 2; t < diff.Length; t++)
             {
                 if (diff[t] < diff[(int)tau])
                     tau = t;
@@ -63,7 +65,7 @@ public class PitchDetector
 
         if (tau <= 0) return -1;
 
-        return _sampleRate / tau;
+        return tau;
     }
 
     private static double YinConfidence(float[] samples, double period)

@@ -9,6 +9,7 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
+    private const double DefaultSignalThreshold = 0.01;
     private readonly NoteGenerator _generator = new(28, 67);
     private readonly StaffRenderer _staff = new();
     private readonly AudioCaptureService _audio;
@@ -19,11 +20,13 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Loaded += OnLoaded;
         _audio = new AudioCaptureService();
         _audio.PitchDetected += OnPitchDetected;
         _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => StatusText.Text = msg);
+        ThresholdSlider.Value = DefaultSignalThreshold;
+        UpdateThresholdDisplay(ThresholdSlider.Value);
         PopulateInputDevices();
+        Loaded += OnLoaded;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -38,7 +41,15 @@ public partial class MainWindow : Window
         foreach (var d in devices)
             InputCombo.Items.Add(d);
         if (InputCombo.Items.Count > 0)
+        {
             InputCombo.SelectedIndex = 0;
+            ToggleMicBtn.IsEnabled = true;
+        }
+        else
+        {
+            ToggleMicBtn.IsEnabled = false;
+            StatusText.Text = "No audio input devices found.";
+        }
     }
 
     private void ToggleMic_Click(object sender, RoutedEventArgs e)
@@ -51,9 +62,11 @@ public partial class MainWindow : Window
         }
         else
         {
-            _audio.StartCapture(InputCombo.SelectedIndex);
-            ToggleMicBtn.Content = "Stop Mic";
-            StatusText.Text = "Listening... Play the note!";
+            if (_audio.StartCapture(InputCombo.SelectedIndex))
+            {
+                ToggleMicBtn.Content = "Stop Mic";
+                StatusText.Text = "Listening... Play the note!";
+            }
         }
     }
 
@@ -62,13 +75,27 @@ public partial class MainWindow : Window
         if (_audio.IsCapturing)
         {
             _audio.StopCapture();
-            _audio.StartCapture(InputCombo.SelectedIndex);
+            if (!_audio.StartCapture(InputCombo.SelectedIndex))
+            {
+                ToggleMicBtn.Content = "Start Mic";
+            }
         }
     }
 
     private void NewNote_Click(object sender, RoutedEventArgs e)
     {
         ShowNote(_generator.RandomNote());
+    }
+
+    private void ThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_audio == null)
+        {
+            return;
+        }
+
+        _audio.MinSignalLevel = (float)e.NewValue;
+        UpdateThresholdDisplay(e.NewValue);
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -138,6 +165,11 @@ public partial class MainWindow : Window
     private void UpdateScore()
     {
         ScoreText.Text = $"{_correct} / {_total}";
+    }
+
+    private void UpdateThresholdDisplay(double value)
+    {
+        ThresholdValueText.Text = value.ToString("0.000");
     }
 
     protected override void OnClosed(EventArgs e)

@@ -27,7 +27,7 @@ public class PitchDetector
     {
         int length = samples.Length;
         var diff = new double[length / 2];
-        double tau = -1;
+        int tauIndex = -1;
 
         for (int t = 0; t < diff.Length; t++)
         {
@@ -47,25 +47,50 @@ public class PitchDetector
 
             if (t > 20 && diff[t] < 0.20)
             {
-                double betterTau = t - 1 + (diff[t - 1] - 0.20) / (diff[t - 1] - diff[t]);
-                tau = betterTau;
+                while (t + 1 < diff.Length && diff[t + 1] < diff[t])
+                {
+                    t++;
+                }
+
+                tauIndex = t;
                 break;
             }
         }
 
-        if (tau < 0 && diff.Length > 0)
+        if (tauIndex < 0 && diff.Length > 0)
         {
-            tau = 1;
+            tauIndex = 1;
             for (int t = 2; t < diff.Length; t++)
             {
-                if (diff[t] < diff[(int)tau])
-                    tau = t;
+                if (diff[t] < diff[tauIndex])
+                    tauIndex = t;
             }
         }
 
-        if (tau <= 0) return -1;
+        if (tauIndex <= 0) return -1;
 
-        return tau;
+        return RefineTau(diff, tauIndex);
+    }
+
+    private static double RefineTau(double[] diff, int tauIndex)
+    {
+        if (tauIndex <= 0 || tauIndex >= diff.Length - 1)
+        {
+            return tauIndex;
+        }
+
+        double left = diff[tauIndex - 1];
+        double center = diff[tauIndex];
+        double right = diff[tauIndex + 1];
+        double denominator = 2 * (2 * center - left - right);
+
+        if (Math.Abs(denominator) < 1e-9)
+        {
+            return tauIndex;
+        }
+
+        double offset = (right - left) / denominator;
+        return tauIndex + Math.Clamp(offset, -0.5, 0.5);
     }
 
     private static double YinConfidence(float[] samples, double period)

@@ -64,9 +64,9 @@
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                     <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="#AAA" Margin="0,0,6,0"/>
-                    <Slider x:Name="ThresholdSlider" Width="110" Minimum="0.01" Maximum="0.25"
-                            SmallChange="0.01" LargeChange="0.02"
-                            TickFrequency="0.01" IsSnapToTickEnabled="False"
+                    <Slider x:Name="ThresholdSlider" Width="110" Minimum="0.001" Maximum="0.15"
+                            SmallChange="0.001" LargeChange="0.01"
+                            TickFrequency="0.005" IsSnapToTickEnabled="False"
                             ValueChanged="ThresholdSlider_ValueChanged"/>
                     <TextBlock x:Name="ThresholdValueText" Width="40" Margin="8,0,0,0"
                                VerticalAlignment="Center" Foreground="#CCC" TextAlignment="Right"/>

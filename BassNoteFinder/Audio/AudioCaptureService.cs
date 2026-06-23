@@ -16,12 +16,13 @@ public class AudioCaptureService : IDisposable
     public float MinSignalLevel
     {
         get => _minSignalLevel;
-        set => _minSignalLevel = Math.Clamp(value, 0f, 0.25f);
+        set => _minSignalLevel = Math.Clamp(value, 0.001f, 0.15f);
     }
 
     private bool _isCapturing;
 
     public event Action<double>? PitchDetected;
+    public event Action? PitchLost;
     public event Action<string>? ErrorOccurred;
 
     public AudioCaptureService(int sampleRate = 44100, int bufferSize = 4096)
@@ -128,6 +129,7 @@ public class AudioCaptureService : IDisposable
 
             if (GetRootMeanSquare(copy) < MinSignalLevel)
             {
+                PitchLost?.Invoke();
                 return;
             }
 
@@ -135,6 +137,10 @@ public class AudioCaptureService : IDisposable
             if (pitch > 0)
             {
                 PitchDetected?.Invoke(pitch);
+            }
+            else
+            {
+                PitchLost?.Invoke();
             }
         }
         catch (Exception ex)

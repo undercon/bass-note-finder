@@ -9,6 +9,9 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
+    private const int RequiredStableDetections = 2;
+    private const int RequiredLostDetections = 3;
+    private const double StableCentsDriftTolerance = 35.0;
     private readonly NoteGenerator _generator = new(28, 67);
     private readonly StaffRenderer _staff = new();
     private readonly AudioCaptureService _audio;
@@ -16,6 +19,11 @@ public partial class MainWindow : Window
     private Note _currentNote = new(40);
     private int _correct, _total;
     private int _cooldown;
+    private int _candidateMidiNote = int.MinValue;
+    private double _candidateCentsOff;
+    private int _stableDetectionCount;
+    private int _lostDetectionCount;
+    private int? _lastScoredMidiNote;
     private bool _loadingConfig;
 
     public MainWindow()
@@ -24,6 +32,7 @@ public partial class MainWindow : Window
         _config = AppConfigStore.Load();
         _audio = new AudioCaptureService();
         _audio.PitchDetected += OnPitchDetected;
+        _audio.PitchLost += OnPitchLost;
         _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => StatusText.Text = msg);
         ApplyConfig();
         PopulateInputDevices();
@@ -155,6 +164,8 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
+            _lostDetectionCount = 0;
+
             if (_cooldown > 0)
             {
                 _cooldown--;
@@ -164,11 +175,21 @@ public partial class MainWindow : Window
             }
 
             var centsOff = Note.CentsOffFromFrequency(frequency, out var detected);
+            TrackCandidateDetection(detected, centsOff);
+
+            bool isStable = _stableDetectionCount >= RequiredStableDetections;
             DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
+            DetectedNoteText.Foreground = isStable ? Brushes.White : Brushes.LightGoldenrodYellow;
+
+            if (!isStable || _lastScoredMidiNote == detected.MidiNote)
+            {
+                return;
+            }
 
             var tolerance = 30.0;
             if (detected.MidiNote == _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
             {
+                _lastScoredMidiNote = detected.MidiNote;
                 _correct++;
                 DetectedNoteText.Foreground = Brushes.Lime;
                 StatusText.Text = $"Correct! That was {_currentNote.FullName} \u2713";
@@ -178,6 +199,7 @@ public partial class MainWindow : Window
             }
             else if (detected.MidiNote != _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
             {
+                _lastScoredMidiNote = detected.MidiNote;
                 DetectedNoteText.Foreground = Brushes.OrangeRed;
                 StatusText.Text = $"Not quite. You played {detected.FullName}, looking for {_currentNote.FullName}";
                 _total++;
@@ -190,6 +212,26 @@ public partial class MainWindow : Window
         });
     }
 
+    private void OnPitchLost()
+    {
+        Dispatcher.Invoke(() =>
+        {
+            _lostDetectionCount++;
+            if (_lostDetectionCount < RequiredLostDetections)
+            {
+                return;
+            }
+
+            ResetDetectionTracking();
+
+            if (_cooldown <= 0)
+            {
+                DetectedNoteText.Text = "--";
+                DetectedNoteText.Foreground = Brushes.White;
+            }
+        });
+    }
+
     private void UpdateScore()
     {
         ScoreText.Text = $"{_correct} / {_total}";
@@ -198,6 +240,29 @@ public partial class MainWindow : Window
     private void UpdateThresholdDisplay(double value)
     {
         ThresholdValueText.Text = value.ToString("0.000");
+    }
+
+    private void TrackCandidateDetection(Note detected, double centsOff)
+    {
+        if (detected.MidiNote == _candidateMidiNote && Math.Abs(centsOff - _candidateCentsOff) <= StableCentsDriftTolerance)
+        {
+            _stableDetectionCount++;
+        }
+        else
+        {
+            _candidateMidiNote = detected.MidiNote;
+            _candidateCentsOff = centsOff;
+            _stableDetectionCount = 1;
+        }
+    }
+
+    private void ResetDetectionTracking()
+    {
+        _candidateMidiNote = int.MinValue;
+        _candidateCentsOff = 0;
+        _stableDetectionCount = 0;
+        _lostDetectionCount = 0;
+        _lastScoredMidiNote = null;
     }
 
     private void ApplyConfig()

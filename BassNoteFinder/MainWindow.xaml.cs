@@ -297,7 +297,7 @@ public partial class MainWindow : Window
     private void ApplyConfig()
     {
         _loadingConfig = true;
-        Width = Math.Max(_config.WindowWidth, MinWidth > 0 ? MinWidth : 1000);
+        Width = Math.Max(_config.WindowWidth, MinWidth > 0 ? MinWidth : 1050);
         Height = Math.Max(_config.WindowHeight, MinHeight > 0 ? MinHeight : 750);
 
         if (_config.WindowLeft.HasValue && _config.WindowTop.HasValue)

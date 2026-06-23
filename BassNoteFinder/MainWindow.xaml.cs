@@ -9,22 +9,23 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
-    private const double DefaultSignalThreshold = 0.01;
     private readonly NoteGenerator _generator = new(28, 67);
     private readonly StaffRenderer _staff = new();
     private readonly AudioCaptureService _audio;
+    private readonly AppConfig _config;
     private Note _currentNote = new(40);
     private int _correct, _total;
     private int _cooldown;
+    private bool _loadingConfig;
 
     public MainWindow()
     {
         InitializeComponent();
+        _config = AppConfigStore.Load();
         _audio = new AudioCaptureService();
         _audio.PitchDetected += OnPitchDetected;
         _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => StatusText.Text = msg);
-        ThresholdSlider.Value = DefaultSignalThreshold;
-        UpdateThresholdDisplay(ThresholdSlider.Value);
+        ApplyConfig();
         PopulateInputDevices();
         Loaded += OnLoaded;
     }
@@ -36,13 +37,28 @@ public partial class MainWindow : Window
 
     private void PopulateInputDevices()
     {
+        _loadingConfig = true;
         InputCombo.Items.Clear();
         var devices = AudioCaptureService.GetInputDevices();
         foreach (var d in devices)
             InputCombo.Items.Add(d);
+
         if (InputCombo.Items.Count > 0)
         {
-            InputCombo.SelectedIndex = 0;
+            int selectedIndex = 0;
+            if (!string.IsNullOrWhiteSpace(_config.SelectedInputDevice))
+            {
+                for (int i = 0; i < devices.Count; i++)
+                {
+                    if (devices[i] == _config.SelectedInputDevice)
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            InputCombo.SelectedIndex = selectedIndex;
             ToggleMicBtn.IsEnabled = true;
         }
         else
@@ -50,6 +66,8 @@ public partial class MainWindow : Window
             ToggleMicBtn.IsEnabled = false;
             StatusText.Text = "No audio input devices found.";
         }
+
+        _loadingConfig = false;
     }
 
     private void ToggleMic_Click(object sender, RoutedEventArgs e)
@@ -72,6 +90,8 @@ public partial class MainWindow : Window
 
     private void InputCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
+        PersistSelectedInputDevice();
+
         if (_audio.IsCapturing)
         {
             _audio.StopCapture();
@@ -96,6 +116,14 @@ public partial class MainWindow : Window
 
         _audio.MinSignalLevel = (float)e.NewValue;
         UpdateThresholdDisplay(e.NewValue);
+
+        if (_loadingConfig)
+        {
+            return;
+        }
+
+        _config.MinSignalLevel = (float)e.NewValue;
+        AppConfigStore.Save(_config);
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -170,6 +198,26 @@ public partial class MainWindow : Window
     private void UpdateThresholdDisplay(double value)
     {
         ThresholdValueText.Text = value.ToString("0.000");
+    }
+
+    private void ApplyConfig()
+    {
+        _loadingConfig = true;
+        ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
+        UpdateThresholdDisplay(ThresholdSlider.Value);
+        _audio.MinSignalLevel = (float)ThresholdSlider.Value;
+        _loadingConfig = false;
+    }
+
+    private void PersistSelectedInputDevice()
+    {
+        if (_loadingConfig)
+        {
+            return;
+        }
+
+        _config.SelectedInputDevice = InputCombo.SelectedItem as string ?? string.Empty;
+        AppConfigStore.Save(_config);
     }
 
     protected override void OnClosed(EventArgs e)

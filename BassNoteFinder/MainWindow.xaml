@@ -1,0 +1,94 @@
+﻿<Window x:Class="BassNoteFinder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bass Note Finder" Height="650" Width="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E1E" Foreground="White"
+        FontFamily="Segoe UI" FontSize="14"
+        KeyDown="Window_KeyDown">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Bass Note Finder" 
+                   FontSize="28" FontWeight="Bold" 
+                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="1" x:Name="StatusText" 
+                   Text="Press Space for a new note, or click New Note. Play it on your bass!"
+                   FontSize="13" HorizontalAlignment="Center"
+                   Foreground="#AAAAAA" Margin="0,0,0,8"/>
+
+        <UniformGrid Grid.Row="2" Rows="1" Columns="2" Margin="0,0,0,10">
+            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Staff" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Canvas x:Name="StaffCanvas" Width="380" Height="200" Margin="10"/>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Fretboard" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Canvas x:Name="FretboardCanvas" Width="600" Height="160" Margin="10" Background="#1E1E1E"/>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="8" Background="#2A2A2A" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Input:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox Grid.Column="1" x:Name="InputCombo" MinWidth="200"
+                          SelectionChanged="InputCombo_SelectionChanged"
+                          Background="#333" Foreground="White">
+                </ComboBox>
+
+                <Button Grid.Column="2" x:Name="ToggleMicBtn" Content="Start Mic"
+                        Click="ToggleMic_Click" Margin="10,0"
+                        Padding="10,6" Background="#0E639C" Foreground="White"
+                        BorderThickness="0" Cursor="Hand"/>
+
+                <Button Grid.Column="3" x:Name="NewNoteBtn" Content="New Note"
+                        Click="NewNote_Click" Margin="10,0"
+                        Padding="10,6" Background="#2D8C2D" Foreground="White"
+                        BorderThickness="0" Cursor="Hand"/>
+
+                <Border Grid.Column="4" BorderBrush="#555" BorderThickness="1" 
+                        CornerRadius="4" Padding="10,4" Margin="10,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Detected: " VerticalAlignment="Center" Foreground="#AAA"/>
+                        <TextBlock x:Name="DetectedNoteText" Text="--" 
+                                   FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
+                        CornerRadius="4" Padding="10,4">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Score: " VerticalAlignment="Center" Foreground="#AAA"/>
+                        <TextBlock x:Name="ScoreText" Text="0 / 0" 
+                                   FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

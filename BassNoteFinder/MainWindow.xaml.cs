@@ -9,9 +9,9 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
-    private const int AttackIgnoreFrames = 3;
-    private const int PitchMedianWindowSize = 5;
-    private const int RequiredStableDetections = 4;
+    private const int AttackIgnoreFrames = 1;
+    private const int PitchMedianWindowSize = 3;
+    private const int RequiredStableDetections = 2;
     private const int RequiredLostDetections = 3;
     private const double StableCentsDriftTolerance = 35.0;
     private const double HarmonicJumpThreshold = 1.35;

@@ -25,7 +25,7 @@ public class AudioCaptureService : IDisposable
     public event Action? PitchLost;
     public event Action<string>? ErrorOccurred;
 
-    public AudioCaptureService(int sampleRate = 44100, int bufferSize = 4096)
+    public AudioCaptureService(int sampleRate = 44100, int bufferSize = 8192)
     {
         SampleRate = sampleRate;
         BufferSize = bufferSize;

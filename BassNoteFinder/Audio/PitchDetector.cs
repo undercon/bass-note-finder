@@ -2,112 +2,154 @@ namespace BassNoteFinder.Audio;
 
 public class PitchDetector
 {
-    private const double MinConfidence = 0.70;
+    private const double MinClarity = 0.78;
+    private const double PeakCutoffRatio = 0.90;
     private readonly int _sampleRate;
-    private readonly int _bufferSize;
+    private readonly int _minLag;
+    private readonly int _maxLag;
 
-    public PitchDetector(int sampleRate = 44100, int bufferSize = 4096)
+    public PitchDetector(int sampleRate = 44100, int bufferSize = 8192)
     {
         _sampleRate = sampleRate;
-        _bufferSize = bufferSize;
+        _minLag = Math.Max(8, sampleRate / 350);
+        _maxLag = Math.Min(bufferSize / 2, sampleRate / 30);
     }
 
     public double DetectPitch(float[] samples)
     {
-        var period = Yin(samples);
-        if (period <= 0) return -1;
+        if (samples.Length < 4)
+        {
+            return -1;
+        }
 
-        var confidence = YinConfidence(samples, period);
-        if (confidence < MinConfidence) return -1;
+        float[] prepared = PrepareSamples(samples);
+        var period = FindPeriod(prepared);
+        if (period <= 0) return -1;
 
         return _sampleRate / period;
     }
 
-    private double Yin(float[] samples)
+    private double FindPeriod(float[] samples)
     {
-        int length = samples.Length;
-        var diff = new double[length / 2];
-        int tauIndex = -1;
-
-        for (int t = 0; t < diff.Length; t++)
+        int maxLag = Math.Min(_maxLag, samples.Length / 2);
+        if (maxLag <= _minLag)
         {
-            diff[t] = 0;
-            for (int i = 0; i < diff.Length; i++)
+            return -1;
+        }
+
+        var nsdf = new double[maxLag + 1];
+        double strongestPeak = 0;
+
+        for (int tau = _minLag; tau <= maxLag; tau++)
+        {
+            double acf = 0;
+            double divisor = 0;
+            int limit = samples.Length - tau;
+
+            for (int i = 0; i < limit; i++)
             {
-                double delta = samples[i] - samples[i + t];
-                diff[t] += delta * delta;
+                double a = samples[i];
+                double b = samples[i + tau];
+                acf += a * b;
+                divisor += a * a + b * b;
+            }
+
+            if (divisor <= 0)
+            {
+                continue;
+            }
+
+            double value = 2.0 * acf / divisor;
+            nsdf[tau] = value;
+            if (value > strongestPeak)
+            {
+                strongestPeak = value;
             }
         }
 
-        double runningSum = 0;
-        for (int t = 1; t < diff.Length; t++)
+        if (strongestPeak < MinClarity)
         {
-            runningSum += diff[t];
-            diff[t] = diff[t] * t / runningSum;
+            return -1;
+        }
 
-            if (t > 20 && diff[t] < 0.20)
+        double cutoff = Math.Max(MinClarity, strongestPeak * PeakCutoffRatio);
+        int bestTau = -1;
+        double bestPeak = double.MinValue;
+
+        for (int tau = _minLag + 1; tau < maxLag; tau++)
+        {
+            if (nsdf[tau] <= cutoff)
             {
-                while (t + 1 < diff.Length && diff[t + 1] < diff[t])
-                {
-                    t++;
-                }
+                continue;
+            }
 
-                tauIndex = t;
+            if (nsdf[tau] >= nsdf[tau - 1] && nsdf[tau] > nsdf[tau + 1])
+            {
+                bestTau = tau;
+                bestPeak = nsdf[tau];
                 break;
             }
         }
 
-        if (tauIndex < 0 && diff.Length > 0)
+        if (bestTau < 0)
         {
-            tauIndex = 1;
-            for (int t = 2; t < diff.Length; t++)
+            for (int tau = _minLag; tau <= maxLag; tau++)
             {
-                if (diff[t] < diff[tauIndex])
-                    tauIndex = t;
+                if (nsdf[tau] > bestPeak)
+                {
+                    bestPeak = nsdf[tau];
+                    bestTau = tau;
+                }
             }
         }
 
-        if (tauIndex <= 0) return -1;
+        if (bestTau <= 0)
+        {
+            return -1;
+        }
 
-        return RefineTau(diff, tauIndex);
+        return RefineTau(nsdf, bestTau);
     }
 
-    private static double RefineTau(double[] diff, int tauIndex)
+    private static float[] PrepareSamples(float[] samples)
     {
-        if (tauIndex <= 0 || tauIndex >= diff.Length - 1)
+        float[] prepared = new float[samples.Length];
+        double mean = 0;
+
+        for (int i = 0; i < samples.Length; i++)
+        {
+            mean += samples[i];
+        }
+
+        mean /= samples.Length;
+
+        for (int i = 0; i < samples.Length; i++)
+        {
+            double window = 0.5 - 0.5 * Math.Cos(2.0 * Math.PI * i / (samples.Length - 1));
+            prepared[i] = (float)((samples[i] - mean) * window);
+        }
+
+        return prepared;
+    }
+
+    private static double RefineTau(double[] curve, int tauIndex)
+    {
+        if (tauIndex <= 0 || tauIndex >= curve.Length - 1)
         {
             return tauIndex;
         }
 
-        double left = diff[tauIndex - 1];
-        double center = diff[tauIndex];
-        double right = diff[tauIndex + 1];
-        double denominator = 2 * (2 * center - left - right);
+        double left = curve[tauIndex - 1];
+        double center = curve[tauIndex];
+        double right = curve[tauIndex + 1];
+        double denominator = left - 2 * center + right;
 
         if (Math.Abs(denominator) < 1e-9)
         {
             return tauIndex;
         }
 
-        double offset = (right - left) / denominator;
+        double offset = 0.5 * (left - right) / denominator;
         return tauIndex + Math.Clamp(offset, -0.5, 0.5);
-    }
-
-    private static double YinConfidence(float[] samples, double period)
-    {
-        int halfLen = samples.Length / 2;
-        int periodInt = (int)Math.Round(period);
-        if (periodInt <= 0 || periodInt >= halfLen) return 0;
-
-        double numer = 0, denom = 0;
-        for (int i = 0; i < halfLen; i++)
-        {
-            double d = samples[i] - samples[i + periodInt];
-            numer += d * d;
-            denom += samples[i] * samples[i] + samples[i + periodInt] * samples[i + periodInt];
-        }
-
-        if (denom <= 0) return 0;
-        return 1.0 - numer / denom;
     }
 }

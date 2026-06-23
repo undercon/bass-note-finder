@@ -9,21 +9,27 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
-    private const int RequiredStableDetections = 2;
+    private const int AttackIgnoreFrames = 3;
+    private const int PitchMedianWindowSize = 5;
+    private const int RequiredStableDetections = 4;
     private const int RequiredLostDetections = 3;
     private const double StableCentsDriftTolerance = 35.0;
+    private const double HarmonicJumpThreshold = 1.35;
     private readonly NoteGenerator _generator = new(28, 67);
     private readonly StaffRenderer _staff = new();
     private readonly AudioCaptureService _audio;
     private readonly AppConfig _config;
+    private readonly Queue<double> _recentFrequencies = new();
     private Note _currentNote = new(40);
-    private int _correct, _total;
     private int _cooldown;
+    private int _attackIgnoreFramesRemaining;
     private int _candidateMidiNote = int.MinValue;
     private double _candidateCentsOff;
     private int _stableDetectionCount;
     private int _lostDetectionCount;
-    private int? _lastScoredMidiNote;
+    private int? _lastResolvedMidiNote;
+    private double? _lastStableFrequency;
+    private bool _signalLost = true;
     private bool _loadingConfig;
 
     public MainWindow()
@@ -37,6 +43,8 @@ public partial class MainWindow : Window
         ApplyConfig();
         PopulateInputDevices();
         Loaded += OnLoaded;
+        LocationChanged += WindowBoundsChanged;
+        SizeChanged += WindowBoundsChanged;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -135,6 +143,17 @@ public partial class MainWindow : Window
         AppConfigStore.Save(_config);
     }
 
+    private void HarmonicCorrectionCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loadingConfig)
+        {
+            return;
+        }
+
+        _config.UseHarmonicCorrection = HarmonicCorrectionCheckBox.IsChecked == true;
+        AppConfigStore.Save(_config);
+    }
+
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -164,6 +183,13 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
+            if (_signalLost)
+            {
+                _signalLost = false;
+                _attackIgnoreFramesRemaining = AttackIgnoreFrames;
+                ClearRecentFrequencies();
+            }
+
             _lostDetectionCount = 0;
 
             if (_cooldown > 0)
@@ -174,14 +200,29 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var centsOff = Note.CentsOffFromFrequency(frequency, out var detected);
+            if (_attackIgnoreFramesRemaining > 0)
+            {
+                _attackIgnoreFramesRemaining--;
+                return;
+            }
+
+            AddRecentFrequency(frequency);
+            double filteredFrequency = GetMedianFrequency();
+            filteredFrequency = ApplyHarmonicCorrection(filteredFrequency);
+
+            var centsOff = Note.CentsOffFromFrequency(filteredFrequency, out var detected);
             TrackCandidateDetection(detected, centsOff);
 
             bool isStable = _stableDetectionCount >= RequiredStableDetections;
-            DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
-            DetectedNoteText.Foreground = isStable ? Brushes.White : Brushes.LightGoldenrodYellow;
+            if (!isStable)
+            {
+                return;
+            }
 
-            if (!isStable || _lastScoredMidiNote == detected.MidiNote)
+            DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
+            DetectedNoteText.Foreground = Brushes.White;
+
+            if (_lastResolvedMidiNote == detected.MidiNote)
             {
                 return;
             }
@@ -189,21 +230,17 @@ public partial class MainWindow : Window
             var tolerance = 30.0;
             if (detected.MidiNote == _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
             {
-                _lastScoredMidiNote = detected.MidiNote;
-                _correct++;
+                _lastStableFrequency = filteredFrequency;
+                _lastResolvedMidiNote = detected.MidiNote;
                 DetectedNoteText.Foreground = Brushes.Lime;
                 StatusText.Text = $"Correct! That was {_currentNote.FullName} \u2713";
-                _total++;
-                UpdateScore();
-                ShowNote(_generator.RandomNote());
             }
             else if (detected.MidiNote != _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
             {
-                _lastScoredMidiNote = detected.MidiNote;
+                _lastStableFrequency = filteredFrequency;
+                _lastResolvedMidiNote = detected.MidiNote;
                 DetectedNoteText.Foreground = Brushes.OrangeRed;
                 StatusText.Text = $"Not quite. You played {detected.FullName}, looking for {_currentNote.FullName}";
-                _total++;
-                UpdateScore();
             }
             else
             {
@@ -223,18 +260,8 @@ public partial class MainWindow : Window
             }
 
             ResetDetectionTracking();
-
-            if (_cooldown <= 0)
-            {
-                DetectedNoteText.Text = "--";
-                DetectedNoteText.Foreground = Brushes.White;
-            }
+            _signalLost = true;
         });
-    }
-
-    private void UpdateScore()
-    {
-        ScoreText.Text = $"{_correct} / {_total}";
     }
 
     private void UpdateThresholdDisplay(double value)
@@ -258,17 +285,30 @@ public partial class MainWindow : Window
 
     private void ResetDetectionTracking()
     {
+        _attackIgnoreFramesRemaining = 0;
         _candidateMidiNote = int.MinValue;
         _candidateCentsOff = 0;
         _stableDetectionCount = 0;
         _lostDetectionCount = 0;
-        _lastScoredMidiNote = null;
+        _lastResolvedMidiNote = null;
+        ClearRecentFrequencies();
     }
 
     private void ApplyConfig()
     {
         _loadingConfig = true;
+        Width = Math.Max(_config.WindowWidth, MinWidth > 0 ? MinWidth : 1000);
+        Height = Math.Max(_config.WindowHeight, MinHeight > 0 ? MinHeight : 750);
+
+        if (_config.WindowLeft.HasValue && _config.WindowTop.HasValue)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = _config.WindowLeft.Value;
+            Top = _config.WindowTop.Value;
+        }
+
         ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
+        HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
         UpdateThresholdDisplay(ThresholdSlider.Value);
         _audio.MinSignalLevel = (float)ThresholdSlider.Value;
         _loadingConfig = false;
@@ -282,6 +322,70 @@ public partial class MainWindow : Window
         }
 
         _config.SelectedInputDevice = InputCombo.SelectedItem as string ?? string.Empty;
+        AppConfigStore.Save(_config);
+    }
+
+    private void AddRecentFrequency(double frequency)
+    {
+        _recentFrequencies.Enqueue(frequency);
+        while (_recentFrequencies.Count > PitchMedianWindowSize)
+        {
+            _recentFrequencies.Dequeue();
+        }
+    }
+
+    private double GetMedianFrequency()
+    {
+        if (_recentFrequencies.Count == 0)
+        {
+            return 0;
+        }
+
+        var ordered = _recentFrequencies.OrderBy(x => x).ToArray();
+        return ordered[ordered.Length / 2];
+    }
+
+    private double ApplyHarmonicCorrection(double frequency)
+    {
+        if (HarmonicCorrectionCheckBox.IsChecked != true || _lastStableFrequency is null)
+        {
+            return frequency;
+        }
+
+        double halfFrequency = frequency / 2.0;
+        if (halfFrequency < 30)
+        {
+            return frequency;
+        }
+
+        double upwardJumpRatio = frequency / _lastStableFrequency.Value;
+        double fullJumpDistance = Math.Abs(frequency - _lastStableFrequency.Value);
+        double halfJumpDistance = Math.Abs(halfFrequency - _lastStableFrequency.Value);
+
+        if (upwardJumpRatio >= HarmonicJumpThreshold && halfJumpDistance < fullJumpDistance)
+        {
+            return halfFrequency;
+        }
+
+        return frequency;
+    }
+
+    private void ClearRecentFrequencies()
+    {
+        _recentFrequencies.Clear();
+    }
+
+    private void WindowBoundsChanged(object? sender, EventArgs e)
+    {
+        if (_loadingConfig || !IsLoaded || WindowState != WindowState.Normal)
+        {
+            return;
+        }
+
+        _config.WindowWidth = Width;
+        _config.WindowHeight = Height;
+        _config.WindowLeft = Left;
+        _config.WindowTop = Top;
         AppConfigStore.Save(_config);
     }
 

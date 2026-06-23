@@ -16,7 +16,7 @@ public class AudioCaptureService : IDisposable
     public float MinSignalLevel
     {
         get => _minSignalLevel;
-        set => _minSignalLevel = Math.Clamp(value, 0.001f, 0.15f);
+        set => _minSignalLevel = Math.Clamp(value, 0.005f, 0.02f);
     }
 
     private bool _isCapturing;

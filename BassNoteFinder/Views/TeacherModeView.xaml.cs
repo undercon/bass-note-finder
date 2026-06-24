@@ -150,6 +150,17 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
+    private void IncludeAccidentalsCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        _staff.IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true;
+        if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
+        {
+            _currentMode = StaffRenderer.AccidentalMode.Natural;
+            _hoverMode = StaffRenderer.AccidentalMode.Natural;
+        }
+        RerenderStaff();
+    }
+
     private void IncludeOctavesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         IncludeOctavesChanged?.Invoke(IncludeOctavesCheckBox.IsChecked == true);

@@ -54,6 +54,10 @@
                       IsChecked="False"
                       Checked="ShowNoteNamesCheckBox_Changed"
                       Unchecked="ShowNoteNamesCheckBox_Changed"/>
+            <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
+                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
+                      Checked="IncludeAccidentalsCheckBox_Changed"
+                      Unchecked="IncludeAccidentalsCheckBox_Changed"/>
             <CheckBox x:Name="IncludeOctavesCheckBox" Content="Include Octaves"
                       VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
                       Checked="IncludeOctavesCheckBox_Changed"

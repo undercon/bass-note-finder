@@ -53,6 +53,10 @@
                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC"
                      Checked="ShowNoteNamesCheckBox_Changed"
                      Unchecked="ShowNoteNamesCheckBox_Changed"/>
+            <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
+                     VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
+                     Checked="IncludeAccidentalsCheckBox_Changed"
+                     Unchecked="IncludeAccidentalsCheckBox_Changed"/>
             <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
                     Margin="15,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>

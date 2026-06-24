@@ -73,9 +73,8 @@ public class PitchDetector
         }
 
         double cutoff = Math.Max(MinClarity, strongestPeak * PeakCutoffRatio);
-        int bestTau = -1;
-        double bestPeak = double.MinValue;
 
+        var peaks = new List<(int tau, double value)>();
         for (int tau = _minLag + 1; tau < maxLag; tau++)
         {
             if (nsdf[tau] <= cutoff)
@@ -85,15 +84,15 @@ public class PitchDetector
 
             if (nsdf[tau] >= nsdf[tau - 1] && nsdf[tau] > nsdf[tau + 1])
             {
-                bestTau = tau;
-                bestPeak = nsdf[tau];
-                break;
+                peaks.Add((tau, nsdf[tau]));
             }
         }
 
-        if (bestTau < 0)
+        if (peaks.Count == 0)
         {
-            for (int tau = _minLag; tau <= maxLag; tau++)
+            int bestTau = _minLag;
+            double bestPeak = nsdf[_minLag];
+            for (int tau = _minLag + 1; tau <= maxLag; tau++)
             {
                 if (nsdf[tau] > bestPeak)
                 {
@@ -101,14 +100,44 @@ public class PitchDetector
                     bestTau = tau;
                 }
             }
+            return RefineTau(nsdf, bestTau);
         }
 
-        if (bestTau <= 0)
+        int selectedTau = peaks[^1].tau;
+        double selectedValue = peaks[^1].value;
+
+        foreach (var (tau, value) in peaks)
         {
-            return -1;
+            int doubleTau = tau * 2;
+            if (doubleTau <= maxLag && nsdf[doubleTau] >= MinClarity)
+            {
+                bool isDoublePeak = false;
+                for (int d = doubleTau - 2; d <= doubleTau + 2 && !isDoublePeak; d++)
+                {
+                    if (d > tau && d <= maxLag && nsdf[d] >= MinClarity)
+                    {
+                        bool isLocalMax = true;
+                        for (int dd = Math.Max(_minLag, d - 1); dd <= Math.Min(maxLag, d + 1); dd++)
+                        {
+                            if (dd != d && nsdf[dd] > nsdf[d])
+                            {
+                                isLocalMax = false;
+                                break;
+                            }
+                        }
+                        if (isLocalMax) isDoublePeak = true;
+                    }
+                }
+
+                if (isDoublePeak && tau > selectedTau)
+                {
+                    selectedTau = doubleTau;
+                    selectedValue = nsdf[doubleTau];
+                }
+            }
         }
 
-        return RefineTau(nsdf, bestTau);
+        return RefineTau(nsdf, selectedTau);
     }
 
     private static float[] PrepareSamples(float[] samples)

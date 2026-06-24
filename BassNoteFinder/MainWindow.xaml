@@ -24,6 +24,7 @@
                     <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="110"/>
                     <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="Input:" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -60,6 +61,12 @@
                                    Width="130" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
+
+                <CheckBox Grid.Column="6" x:Name="ShowDeviationCheckBox" Content="Deviation"
+                          VerticalAlignment="Center" Margin="10,0,0,0"
+                          Foreground="#CCC" IsChecked="False"
+                          Checked="ShowDeviationCheckBox_Changed"
+                          Unchecked="ShowDeviationCheckBox_Changed"/>
             </Grid>
         </Border>
     </Grid>

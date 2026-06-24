@@ -32,6 +32,8 @@ public partial class MainWindow : Window
     private bool _signalLost = true;
     private bool _loadingConfig;
 
+    public bool ShowDeviation { get; set; }
+
     public MainWindow()
     {
         InitializeComponent();
@@ -172,6 +174,11 @@ public partial class MainWindow : Window
         AppConfigStore.Save(_config);
     }
 
+    private void ShowDeviationCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        ShowDeviation = ShowDeviationCheckBox.IsChecked == true;
+    }
+
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -221,7 +228,9 @@ public partial class MainWindow : Window
             _lastResolvedMidiNote = detected.MidiNote;
             _lastStableFrequency = filteredFrequency;
 
-            DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
+            DetectedNoteText.Text = ShowDeviation
+                ? $"{detected.FullName} ({centsOff:F0}\u00A2)"
+                : detected.FullName;
             DetectedNoteText.Foreground = Brushes.White;
 
             _activeMode?.OnNoteDetected(detected, centsOff);

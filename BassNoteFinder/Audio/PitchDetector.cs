@@ -4,6 +4,7 @@ public class PitchDetector
 {
     private const double MinClarity = 0.78;
     private const double PeakCutoffRatio = 0.90;
+    private const double HarmonicFreqThreshold = 150.0;
     private readonly int _sampleRate;
     private readonly int _minLag;
     private readonly int _maxLag;
@@ -11,8 +12,8 @@ public class PitchDetector
     public PitchDetector(int sampleRate = 44100, int bufferSize = 8192)
     {
         _sampleRate = sampleRate;
-        _minLag = Math.Max(8, sampleRate / 350);
-        _maxLag = Math.Min(bufferSize / 2, sampleRate / 30);
+        _minLag = Math.Max(8, (int)(sampleRate / 210.0));
+        _maxLag = Math.Min(bufferSize / 2, (int)(sampleRate / 40.0));
     }
 
     public double DetectPitch(float[] samples)
@@ -103,36 +104,19 @@ public class PitchDetector
             return RefineTau(nsdf, bestTau);
         }
 
-        int selectedTau = peaks[^1].tau;
-        double selectedValue = peaks[^1].value;
+        var strongest = peaks.Aggregate((a, b) => a.value > b.value ? a : b);
+        int selectedTau = strongest.tau;
+        double selectedFreq = (double)_sampleRate / selectedTau;
 
-        foreach (var (tau, value) in peaks)
+        if (selectedFreq > HarmonicFreqThreshold)
         {
-            int doubleTau = tau * 2;
-            if (doubleTau <= maxLag && nsdf[doubleTau] >= MinClarity)
+            foreach (var (tau, value) in peaks)
             {
-                bool isDoublePeak = false;
-                for (int d = doubleTau - 2; d <= doubleTau + 2 && !isDoublePeak; d++)
+                double ratio = (double)tau / selectedTau;
+                if (Math.Abs(ratio - 2.0) < 0.15)
                 {
-                    if (d > tau && d <= maxLag && nsdf[d] >= MinClarity)
-                    {
-                        bool isLocalMax = true;
-                        for (int dd = Math.Max(_minLag, d - 1); dd <= Math.Min(maxLag, d + 1); dd++)
-                        {
-                            if (dd != d && nsdf[dd] > nsdf[d])
-                            {
-                                isLocalMax = false;
-                                break;
-                            }
-                        }
-                        if (isLocalMax) isDoublePeak = true;
-                    }
-                }
-
-                if (isDoublePeak && tau > selectedTau)
-                {
-                    selectedTau = doubleTau;
-                    selectedValue = nsdf[doubleTau];
+                    selectedTau = tau;
+                    break;
                 }
             }
         }

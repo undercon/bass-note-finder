@@ -6,7 +6,7 @@ public class NoteGenerator
     private readonly int _minMidi;
     private readonly int _maxMidi;
 
-    public NoteGenerator(int minMidi = 28, int maxMidi = 67)
+    public NoteGenerator(int minMidi = 28, int maxMidi = 55)
     {
         _minMidi = minMidi;
         _maxMidi = maxMidi;

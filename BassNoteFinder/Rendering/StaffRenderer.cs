@@ -12,28 +12,53 @@ public class StaffRenderer
     private const double NoteW = 14;
     private const double NoteH = 10;
     private const double LedgerLen = 18;
+    private const double StaffTop = 50;
+
+    private static readonly Brush StaffLineBrush = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+    private static readonly Brush ClefBrush = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+    private static readonly Brush NoteBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
+    private static readonly Brush AccidentalBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
+    private static readonly Brush HighlightBrush = new SolidColorBrush(Color.FromRgb(0x0E, 0x63, 0x9C));
+
+    private static readonly int[] DiatonicToPitchClass = { 0, 2, 4, 5, 7, 9, 11 };
 
     public double StaffWidth { get; set; } = 400;
+
+    public static Note? NoteFromY(double y)
+    {
+        double pos = (StaffTop + 4 * Ls - y) / (Ls / 2.0);
+        int posRounded = (int)Math.Round(pos);
+        return NoteFromStaffPosition(posRounded);
+    }
+
+    private static Note? NoteFromStaffPosition(int pos)
+    {
+        int temp = pos + 4;
+        int diatonicClass = ((temp % 7) + 7) % 7;
+        int octave = (int)Math.Floor((double)temp / 7) + 2;
+
+        int pitchClass = DiatonicToPitchClass[diatonicClass];
+        int midi = (octave + 1) * 12 + pitchClass;
+
+        if (midi < 28 || midi > 55) return null;
+        return new Note(midi);
+    }
+
+    public void RenderEmpty(Canvas canvas)
+    {
+        canvas.Children.Clear();
+        DrawStaff(canvas);
+    }
 
     public void Render(Canvas canvas, Note note)
     {
         canvas.Children.Clear();
+        DrawStaff(canvas);
 
         double cx = StaffWidth / 2;
-        double top = 50;
-
-        for (int i = 0; i < 5; i++)
-            canvas.Children.Add(new Line
-            {
-                X1 = 30, Y1 = top + i * Ls,
-                X2 = StaffWidth - 30, Y2 = top + i * Ls,
-                Stroke = Brushes.Black, StrokeThickness = 1
-            });
-
-        DrawBassClef(canvas, 32, top + 2 * Ls + 6);
+        double top = StaffTop;
 
         int pos = note.StaffPosition();
-
         double noteY = top + 4 * Ls - pos * (Ls / 2.0);
 
         if (pos < 0)
@@ -62,22 +87,47 @@ public class StaffRenderer
             var acc = new TextBlock
             {
                 Text = "\u266F", FontSize = 18,
-                FontWeight = FontWeights.Bold, Foreground = Brushes.Black
+                FontWeight = FontWeights.Bold, Foreground = AccidentalBrush
             };
             Canvas.SetLeft(acc, cx - 24);
             Canvas.SetTop(acc, noteY - 12);
             canvas.Children.Add(acc);
         }
 
+        var highlight = new Ellipse
+        {
+            Width = NoteW + 10, Height = NoteH + 10,
+            Fill = HighlightBrush,
+            Opacity = 0.4
+        };
+        Canvas.SetLeft(highlight, cx - (NoteW + 10) / 2);
+        Canvas.SetTop(highlight, noteY - (NoteH + 10) / 2);
+        canvas.Children.Add(highlight);
+
         var ellipse = new Ellipse
         {
             Width = NoteW, Height = NoteH,
-            Fill = Brushes.Black,
-            Stroke = Brushes.Black, StrokeThickness = 1
+            Fill = NoteBrush,
+            Stroke = NoteBrush, StrokeThickness = 1
         };
         Canvas.SetLeft(ellipse, cx - NoteW / 2);
         Canvas.SetTop(ellipse, noteY - NoteH / 2);
         canvas.Children.Add(ellipse);
+    }
+
+    private void DrawStaff(Canvas canvas)
+    {
+        double top = StaffTop;
+
+        for (int i = 0; i < 5; i++)
+            canvas.Children.Add(new Line
+            {
+                X1 = 30, Y1 = top + i * Ls,
+                X2 = StaffWidth - 30, Y2 = top + i * Ls,
+                Stroke = StaffLineBrush, StrokeThickness = 1
+            });
+
+        DrawBassClef(canvas, 32, top + 2 * Ls + 6);
     }
 
     private static void DrawBassClef(Canvas canvas, double x, double y)
@@ -87,7 +137,7 @@ public class StaffRenderer
             Text = "\U0001D122",
             FontFamily = new FontFamily("Segoe UI Symbol"),
             FontSize = 52,
-            Foreground = Brushes.Black
+            Foreground = ClefBrush
         };
         Canvas.SetLeft(tb, x - 28);
         Canvas.SetTop(tb, y - 42);
@@ -100,7 +150,7 @@ public class StaffRenderer
         {
             X1 = x - LedgerLen / 2, Y1 = y,
             X2 = x + LedgerLen / 2, Y2 = y,
-            Stroke = Brushes.Black, StrokeThickness = 1
+            Stroke = StaffLineBrush, StrokeThickness = 1
         });
     }
 }

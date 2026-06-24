@@ -19,7 +19,7 @@ public class FretboardRenderer
     public double TotalWidth => NutWidth + (NumFrets + 1) * FretSpacing + 30;
     public double TotalHeight => 5 * StringSpacing + 40;
 
-    public void Render(Canvas canvas, Note? targetNote = null)
+    public void Render(Canvas canvas, Note? targetNote = null, Color? highlightColor = null)
     {
         canvas.Children.Clear();
 
@@ -133,10 +133,11 @@ public class FretboardRenderer
                 double sx = nutEnd + (fret + 0.5) * FretSpacing;
                 double sy = y0 + str * StringSpacing;
 
+                var color = highlightColor ?? Color.FromRgb(0, 180, 255);
                 canvas.Children.Add(new Ellipse
                 {
                     Width = 20, Height = 20,
-                    Fill = new SolidColorBrush(Color.FromRgb(0, 180, 255)),
+                    Fill = new SolidColorBrush(color),
                     Opacity = 0.8
                 });
                 Canvas.SetLeft(canvas.Children[^1] as Ellipse, sx - 10);

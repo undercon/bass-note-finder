@@ -2,8 +2,9 @@
 using System.Windows.Input;
 using System.Windows.Media;
 using BassNoteFinder.Audio;
+using BassNoteFinder.Gameplay;
 using BassNoteFinder.MusicTheory;
-using BassNoteFinder.Rendering;
+using BassNoteFinder.Views;
 
 namespace BassNoteFinder;
 
@@ -15,13 +16,12 @@ public partial class MainWindow : Window
     private const int RequiredLostDetections = 3;
     private const double StableCentsDriftTolerance = 35.0;
     private const double HarmonicJumpThreshold = 1.35;
-    private readonly NoteGenerator _generator = new(28, 67);
-    private readonly StaffRenderer _staff = new();
+
     private readonly AudioCaptureService _audio;
     private readonly AppConfig _config;
     private readonly Queue<double> _recentFrequencies = new();
-    private Note _currentNote = new(40);
-    private int _cooldown;
+
+    private IGameMode? _activeMode;
     private int _attackIgnoreFramesRemaining;
     private int _candidateMidiNote = int.MinValue;
     private double _candidateCentsOff;
@@ -39,7 +39,7 @@ public partial class MainWindow : Window
         _audio = new AudioCaptureService();
         _audio.PitchDetected += OnPitchDetected;
         _audio.PitchLost += OnPitchLost;
-        _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => StatusText.Text = msg);
+        _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => DetectedNoteText.Text = msg);
         ApplyConfig();
         PopulateInputDevices();
         Loaded += OnLoaded;
@@ -49,7 +49,30 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ShowNote(_generator.RandomNote());
+        ShowMenu();
+    }
+
+    private void ShowMenu()
+    {
+        if (_activeMode != null)
+        {
+            _activeMode.OnDeactivate();
+            _activeMode = null;
+        }
+
+        ResetDetectionTracking();
+        var menu = new MenuView();
+        menu.TeacherModeSelected += ShowTeacherMode;
+        MainContent.Content = menu;
+    }
+
+    private void ShowTeacherMode()
+    {
+        var view = new TeacherModeView();
+        view.BackToMenuRequested += ShowMenu;
+        MainContent.Content = view;
+        _activeMode = view;
+        _activeMode.OnActivate();
     }
 
     private void PopulateInputDevices()
@@ -81,7 +104,7 @@ public partial class MainWindow : Window
         else
         {
             ToggleMicBtn.IsEnabled = false;
-            StatusText.Text = "No audio input devices found.";
+            DetectedNoteText.Text = "No devices";
         }
 
         _loadingConfig = false;
@@ -93,14 +116,14 @@ public partial class MainWindow : Window
         {
             _audio.StopCapture();
             ToggleMicBtn.Content = "Start Mic";
-            StatusText.Text = "Microphone stopped.";
+            DetectedNoteText.Text = "--";
         }
         else
         {
             if (_audio.StartCapture(InputCombo.SelectedIndex))
             {
                 ToggleMicBtn.Content = "Stop Mic";
-                StatusText.Text = "Listening... Play the note!";
+                DetectedNoteText.Text = "Listening...";
             }
         }
     }
@@ -117,11 +140,6 @@ public partial class MainWindow : Window
                 ToggleMicBtn.Content = "Start Mic";
             }
         }
-    }
-
-    private void NewNote_Click(object sender, RoutedEventArgs e)
-    {
-        ShowNote(_generator.RandomNote());
     }
 
     private void ThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -158,25 +176,9 @@ public partial class MainWindow : Window
     {
         if (e.Key == Key.Space)
         {
-            ShowNote(_generator.RandomNote());
+            _activeMode?.OnSpacePressed();
             e.Handled = true;
         }
-    }
-
-    private void ShowNote(Note note)
-    {
-        _currentNote = note;
-        _cooldown = 3;
-
-        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 380;
-        _staff.Render(StaffCanvas, note);
-
-        var fretRenderer = new FretboardRenderer();
-        fretRenderer.Render(FretboardCanvas, note);
-
-        StatusText.Text = $"Find this note on your bass: {note.FullName}";
-        DetectedNoteText.Text = "--";
-        DetectedNoteText.Foreground = Brushes.White;
     }
 
     private void OnPitchDetected(double frequency)
@@ -191,14 +193,6 @@ public partial class MainWindow : Window
             }
 
             _lostDetectionCount = 0;
-
-            if (_cooldown > 0)
-            {
-                _cooldown--;
-                if (_cooldown <= 0)
-                    DetectedNoteText.Text = "--";
-                return;
-            }
 
             if (_attackIgnoreFramesRemaining > 0)
             {
@@ -219,33 +213,18 @@ public partial class MainWindow : Window
                 return;
             }
 
-            DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
-            DetectedNoteText.Foreground = Brushes.White;
-
             if (_lastResolvedMidiNote == detected.MidiNote)
             {
                 return;
             }
 
-            var tolerance = 30.0;
-            if (detected.MidiNote == _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
-            {
-                _lastStableFrequency = filteredFrequency;
-                _lastResolvedMidiNote = detected.MidiNote;
-                DetectedNoteText.Foreground = Brushes.Lime;
-                StatusText.Text = $"Correct! That was {_currentNote.FullName} \u2713";
-            }
-            else if (detected.MidiNote != _currentNote.MidiNote && Math.Abs(centsOff) < tolerance)
-            {
-                _lastStableFrequency = filteredFrequency;
-                _lastResolvedMidiNote = detected.MidiNote;
-                DetectedNoteText.Foreground = Brushes.OrangeRed;
-                StatusText.Text = $"Not quite. You played {detected.FullName}, looking for {_currentNote.FullName}";
-            }
-            else
-            {
-                DetectedNoteText.Foreground = Brushes.Yellow;
-            }
+            _lastResolvedMidiNote = detected.MidiNote;
+            _lastStableFrequency = filteredFrequency;
+
+            DetectedNoteText.Text = $"{detected.FullName} ({centsOff:F0}\u00A2)";
+            DetectedNoteText.Foreground = Brushes.White;
+
+            _activeMode?.OnNoteDetected(detected, centsOff);
         });
     }
 
@@ -261,6 +240,7 @@ public partial class MainWindow : Window
 
             ResetDetectionTracking();
             _signalLost = true;
+            _activeMode?.OnNoteLost();
         });
     }
 
@@ -291,6 +271,7 @@ public partial class MainWindow : Window
         _stableDetectionCount = 0;
         _lostDetectionCount = 0;
         _lastResolvedMidiNote = null;
+        _lastStableFrequency = null;
         ClearRecentFrequencies();
     }
 

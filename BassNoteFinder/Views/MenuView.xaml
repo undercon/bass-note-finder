@@ -1,0 +1,17 @@
+<UserControl x:Class="BassNoteFinder.Views.MenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel>
+            <TextBlock Text="Bass Note Finder" FontSize="32" FontWeight="Bold"
+                       HorizontalAlignment="Center" Margin="0,0,0,10"/>
+            <TextBlock Text="Select a mode" FontSize="14" Foreground="#AAA"
+                       HorizontalAlignment="Center" Margin="0,0,0,30"/>
+            <Button Content="Teacher Mode" Width="200" Height="40"
+                    Click="TeacherModeButton_Click"
+                    Background="#0E639C" Foreground="White" BorderThickness="0"
+                    FontSize="16" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

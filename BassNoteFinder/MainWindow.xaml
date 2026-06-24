@@ -6,52 +6,22 @@
         Background="#1E1E1E" Foreground="White"
         FontFamily="Segoe UI" FontSize="14"
         KeyDown="Window_KeyDown">
-    <Grid Margin="15">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Bass Note Finder" 
-                   FontSize="28" FontWeight="Bold" 
-                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
+        <ContentControl Grid.Row="0" x:Name="MainContent"/>
 
-        <TextBlock Grid.Row="1" x:Name="StatusText" 
-                   Text="Press Space for a new note, or click New Note. Play it on your bass!"
-                   FontSize="13" HorizontalAlignment="Center"
-                   Foreground="#AAAAAA" Margin="0,0,0,8"/>
-
-        <UniformGrid Grid.Row="2" Rows="1" Columns="2" Margin="0,0,0,10">
-            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Staff" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="StaffCanvas" Width="380" Height="200" Margin="10"/>
-                    </ScrollViewer>
-                </DockPanel>
-            </Border>
-            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Fretboard" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="FretboardCanvas" Width="600" Height="160" Margin="10" Background="#1E1E1E"/>
-                    </ScrollViewer>
-                </DockPanel>
-            </Border>
-        </UniformGrid>
-
-        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="8" Background="#2A2A2A" Padding="12">
+        <Border Grid.Row="1" BorderBrush="#333" BorderThickness="1" CornerRadius="8"
+                Background="#2A2A2A" Padding="12" Margin="15,0,15,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="45"/>
                     <ColumnDefinition Width="250"/>
                     <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="110"/>
                     <ColumnDefinition Width="110"/>
                     <ColumnDefinition Width="220"/>
                 </Grid.ColumnDefinitions>
@@ -82,12 +52,7 @@
                         Padding="10,6" Background="#0E639C" Foreground="White"
                         BorderThickness="0" Cursor="Hand"/>
 
-                <Button Grid.Column="5" x:Name="NewNoteBtn" Content="New Note"
-                        Width="100" Click="NewNote_Click" Margin="10,0"
-                        Padding="10,6" Background="#2D8C2D" Foreground="White"
-                        BorderThickness="0" Cursor="Hand"/>
-
-                <Border Grid.Column="6" BorderBrush="#555" BorderThickness="1" 
+                <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
                         CornerRadius="4" Padding="10,4" Margin="10,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Detected: " VerticalAlignment="Center" Foreground="#AAA"/>

@@ -48,19 +48,16 @@
             </Border>
         </UniformGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
             <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show Note Names"
-                     VerticalAlignment="Center" Margin="5,0" Foreground="#CCC"
-                     Checked="ShowNoteNamesCheckBox_Changed"
-                     Unchecked="ShowNoteNamesCheckBox_Changed"/>
+                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC"
+                      IsChecked="False"
+                      Checked="ShowNoteNamesCheckBox_Changed"
+                      Unchecked="ShowNoteNamesCheckBox_Changed"/>
             <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
-                     VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
-                     Checked="IncludeAccidentalsCheckBox_Changed"
-                     Unchecked="IncludeAccidentalsCheckBox_Changed"/>
-            <CheckBox x:Name="ShowStatusNoteNameCheckBox" Content="Note Names"
-                     VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
-                     Checked="ShowStatusNoteNameCheckBox_Changed"
-                     Unchecked="ShowStatusNoteNameCheckBox_Changed"/>
+                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
+                      Checked="IncludeAccidentalsCheckBox_Changed"
+                      Unchecked="IncludeAccidentalsCheckBox_Changed"/>
             <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
                     Margin="15,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>

@@ -145,6 +145,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void ShowNoteNamesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.ShowNoteNames = ShowNoteNamesCheckBox.IsChecked == true;
+        UpdateStatusText();
         RerenderStaff();
     }
 
@@ -159,16 +160,11 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
-    private void ShowStatusNoteNameCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        UpdateStatusText();
-    }
-
     private void UpdateStatusText()
     {
         if (_currentNote.HasValue)
         {
-            if (ShowStatusNoteNameCheckBox.IsChecked == true)
+            if (ShowNoteNamesCheckBox.IsChecked == true)
             {
                 StatusText.Text = $"Looking for: {_currentNote.Value.FullName}";
                 StatusText.FontSize = 20;

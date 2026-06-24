@@ -2,7 +2,7 @@ namespace BassNoteFinder;
 
 public class AppConfig
 {
-    public float MinSignalLevel { get; set; } = 0.005f;
+    public float MinSignalLevel { get; set; } = 0.01f;
     public string SelectedInputDevice { get; set; } = string.Empty;
     public bool UseHarmonicCorrection { get; set; } = true;
     public double WindowWidth { get; set; } = 1050;

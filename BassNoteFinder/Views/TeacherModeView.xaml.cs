@@ -37,7 +37,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     {
         _currentNote = null;
         SetFretboardState(FretboardState.Hidden);
-        StatusText.Text = "Click the staff to place a note, or press Random.";
+        UpdateStatusText();
     }
 
     public void OnDeactivate()
@@ -55,14 +55,19 @@ public partial class TeacherModeView : UserControl, IGameMode
 
         if (note.MidiNote == target.MidiNote)
         {
-            SetFretboardState(FretboardState.CelebratingCorrect);
+            SetFretboardState(FretboardState.CelebratingCorrect, target);
             StatusText.Text = $"Correct! That was {writtenTarget.FullName} \u2713";
+            StatusText.FontSize = 20;
+            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.Foreground = Brushes.LimeGreen;
         }
         else
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {writtenPlayed.FullName}.";
-            _flashTimer.Start();
+            StatusText.FontSize = 16;
+            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.Foreground = Brushes.OrangeRed;
         }
     }
 
@@ -154,6 +159,40 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
+    private void ShowStatusNoteNameCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateStatusText();
+    }
+
+    private void UpdateStatusText()
+    {
+        if (_currentNote.HasValue)
+        {
+            if (ShowStatusNoteNameCheckBox.IsChecked == true)
+            {
+                var writtenNote = new Note(_currentNote.Value.MidiNote + 12);
+                StatusText.Text = $"Looking for: {writtenNote.FullName}";
+                StatusText.FontSize = 20;
+                StatusText.FontWeight = FontWeights.Bold;
+                StatusText.Foreground = Brushes.White;
+            }
+            else
+            {
+                StatusText.Text = "Find this note on your bass.";
+                StatusText.FontSize = 13;
+                StatusText.FontWeight = FontWeights.Normal;
+                StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+            }
+        }
+        else
+        {
+            StatusText.Text = "Click the staff to place a note, or press Random.";
+            StatusText.FontSize = 13;
+            StatusText.FontWeight = FontWeights.Normal;
+            StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+        }
+    }
+
     private void PickRandomNote()
     {
         if (_staff.IncludeAccidentals)
@@ -177,9 +216,7 @@ public partial class TeacherModeView : UserControl, IGameMode
 
         UpdateStaffWidth();
         _staff.Render(StaffCanvas, note, mode);
-
-        var writtenNote = new Note(note.MidiNote + 12);
-        StatusText.Text = $"Find this note on your bass: {writtenNote.FullName}";
+        UpdateStatusText();
     }
 
     private void RerenderStaff()
@@ -214,6 +251,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Hidden;
                 OverlayPanel.Visibility = Visibility.Visible;
                 OverlayIcon.Text = "?";
+                OverlayIcon.FontSize = 48;
                 OverlayIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));
                 OverlayText.Text = "Play the note to reveal";
                 OverlayText.Foreground = new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77));
@@ -232,10 +270,23 @@ public partial class TeacherModeView : UserControl, IGameMode
             case FretboardState.CelebratingCorrect:
                 FretboardPanel.Visibility = Visibility.Hidden;
                 OverlayPanel.Visibility = Visibility.Visible;
-                OverlayIcon.Text = "\u2713";
-                OverlayIcon.Foreground = Brushes.LimeGreen;
-                OverlayText.Text = "Correct!";
-                OverlayText.Foreground = Brushes.LimeGreen;
+                if (studentNote.HasValue)
+                {
+                    var written = new Note(studentNote.Value.MidiNote + 12);
+                    OverlayIcon.Text = written.FullName;
+                    OverlayIcon.FontSize = 36;
+                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayText.Text = "Correct!";
+                    OverlayText.Foreground = Brushes.LimeGreen;
+                }
+                else
+                {
+                    OverlayIcon.Text = "\u2713";
+                    OverlayIcon.FontSize = 48;
+                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayText.Text = "Correct!";
+                    OverlayText.Foreground = Brushes.LimeGreen;
+                }
                 break;
         }
     }
@@ -243,6 +294,5 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void FlashTimer_Tick(object? sender, EventArgs e)
     {
         _flashTimer.Stop();
-        SetFretboardState(FretboardState.Hidden);
     }
 }

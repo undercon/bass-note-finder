@@ -4,6 +4,7 @@ public class PitchDetector
 {
     private const double MinClarity = 0.78;
     private const double PeakCutoffRatio = 0.90;
+    private const double HarmonicFreqThreshold = 150.0;
     private readonly int _sampleRate;
     private readonly int _minLag;
     private readonly int _maxLag;
@@ -11,8 +12,8 @@ public class PitchDetector
     public PitchDetector(int sampleRate = 44100, int bufferSize = 8192)
     {
         _sampleRate = sampleRate;
-        _minLag = Math.Max(8, sampleRate / 350);
-        _maxLag = Math.Min(bufferSize / 2, sampleRate / 30);
+        _minLag = Math.Max(8, (int)(sampleRate / 210.0));
+        _maxLag = Math.Min(bufferSize / 2, (int)(sampleRate / 40.0));
     }
 
     public double DetectPitch(float[] samples)
@@ -73,9 +74,8 @@ public class PitchDetector
         }
 
         double cutoff = Math.Max(MinClarity, strongestPeak * PeakCutoffRatio);
-        int bestTau = -1;
-        double bestPeak = double.MinValue;
 
+        var peaks = new List<(int tau, double value)>();
         for (int tau = _minLag + 1; tau < maxLag; tau++)
         {
             if (nsdf[tau] <= cutoff)
@@ -85,15 +85,15 @@ public class PitchDetector
 
             if (nsdf[tau] >= nsdf[tau - 1] && nsdf[tau] > nsdf[tau + 1])
             {
-                bestTau = tau;
-                bestPeak = nsdf[tau];
-                break;
+                peaks.Add((tau, nsdf[tau]));
             }
         }
 
-        if (bestTau < 0)
+        if (peaks.Count == 0)
         {
-            for (int tau = _minLag; tau <= maxLag; tau++)
+            int bestTau = _minLag;
+            double bestPeak = nsdf[_minLag];
+            for (int tau = _minLag + 1; tau <= maxLag; tau++)
             {
                 if (nsdf[tau] > bestPeak)
                 {
@@ -101,14 +101,27 @@ public class PitchDetector
                     bestTau = tau;
                 }
             }
+            return RefineTau(nsdf, bestTau);
         }
 
-        if (bestTau <= 0)
+        var strongest = peaks.Aggregate((a, b) => a.value > b.value ? a : b);
+        int selectedTau = strongest.tau;
+        double selectedFreq = (double)_sampleRate / selectedTau;
+
+        if (selectedFreq > HarmonicFreqThreshold)
         {
-            return -1;
+            foreach (var (tau, value) in peaks)
+            {
+                double ratio = (double)tau / selectedTau;
+                if (Math.Abs(ratio - 2.0) < 0.15)
+                {
+                    selectedTau = tau;
+                    break;
+                }
+            }
         }
 
-        return RefineTau(nsdf, bestTau);
+        return RefineTau(nsdf, selectedTau);
     }
 
     private static float[] PrepareSamples(float[] samples)

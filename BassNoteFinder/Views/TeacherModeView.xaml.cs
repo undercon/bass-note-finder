@@ -26,6 +26,7 @@ public partial class TeacherModeView : UserControl, IGameMode
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
+    public bool IncludeOctaves => IncludeOctavesCheckBox.IsChecked == true;
 
     public TeacherModeView()
     {
@@ -50,14 +51,12 @@ public partial class TeacherModeView : UserControl, IGameMode
     {
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
-
-        var writtenTarget = target;
-        var writtenPlayed = note;
+        bool includeOctaves = IncludeOctavesCheckBox.IsChecked == true;
 
         if (note.MidiNote == target.MidiNote)
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
-            StatusText.Text = $"Correct! That was {writtenTarget.FullName} \u2713";
+            StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
             StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.Foreground = Brushes.LimeGreen;
@@ -65,7 +64,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         else
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {writtenPlayed.FullName}.";
+            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.Foreground = Brushes.OrangeRed;
@@ -81,6 +80,7 @@ public partial class TeacherModeView : UserControl, IGameMode
 
     private void TeacherModeView_Loaded(object sender, RoutedEventArgs e)
     {
+        _staff.IncludeOctaves = IncludeOctavesCheckBox.IsChecked == true;
         UpdateStaffWidth();
         _staff.RenderEmpty(StaffCanvas);
     }
@@ -163,9 +163,9 @@ public partial class TeacherModeView : UserControl, IGameMode
 
     private void IncludeOctavesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        IncludeOctavesChanged?.Invoke(IncludeOctavesCheckBox.IsChecked == true);
-        _currentMode = StaffRenderer.AccidentalMode.Natural;
-        _hoverMode = _currentMode;
+        bool includeOctaves = IncludeOctavesCheckBox.IsChecked == true;
+        _staff.IncludeOctaves = includeOctaves;
+        IncludeOctavesChanged?.Invoke(includeOctaves);
         UpdateStatusText();
         RerenderStaff();
     }
@@ -176,7 +176,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             if (ShowNoteNamesCheckBox.IsChecked == true)
             {
-                StatusText.Text = $"Looking for: {_currentNote.Value.FullName}";
+                StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
                 StatusText.FontSize = 20;
                 StatusText.FontWeight = FontWeights.Bold;
                 StatusText.Foreground = Brushes.White;
@@ -277,7 +277,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    OverlayIcon.Text = studentNote.Value.FullName;
+                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
                     OverlayIcon.FontSize = 36;
                     OverlayIcon.Foreground = Brushes.LimeGreen;
                     OverlayText.Text = "Correct!";
@@ -300,5 +300,15 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void FlashTimer_Tick(object? sender, EventArgs e)
     {
         _flashTimer.Stop();
+    }
+
+    private static NoteDisplay.AccidentalDisplay ToDisplayAccidental(StaffRenderer.AccidentalMode mode)
+    {
+        return mode switch
+        {
+            StaffRenderer.AccidentalMode.Flat => NoteDisplay.AccidentalDisplay.Flat,
+            StaffRenderer.AccidentalMode.Sharp => NoteDisplay.AccidentalDisplay.Sharp,
+            _ => NoteDisplay.AccidentalDisplay.Natural
+        };
     }
 }

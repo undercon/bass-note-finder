@@ -24,14 +24,11 @@ public class StaffRenderer
     private static readonly Brush NoteNameBrush = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
     private static readonly Brush PreviewBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
 
-    private const int WrittenOctaveOffset = 12;
     private const int MinWrittenMidi = 40;
     private const int MaxWrittenMidi = 67;
 
     private static readonly int[] DiatonicToPitchClass = { 0, 2, 4, 5, 7, 9, 11 };
     private static readonly int[] PitchClassToDiatonic = { 0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6 };
-    private static readonly string[] SharpNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
-    private static readonly string[] FlatNames = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 
     public double StaffWidth { get; set; } = 500;
     public bool ShowNoteNames { get; set; }
@@ -88,12 +85,12 @@ public class StaffRenderer
         int writtenMidi = (octave + 1) * 12 + pitchClass;
 
         if (writtenMidi < MinWrittenMidi || writtenMidi > MaxWrittenMidi) return null;
-        return new Note(writtenMidi - WrittenOctaveOffset);
+        return new Note(NoteDisplay.ToSoundingMidi(writtenMidi));
     }
 
     private static int WrittenStaffPosition(Note note)
     {
-        int writtenMidi = note.MidiNote + WrittenOctaveOffset;
+        int writtenMidi = NoteDisplay.ToWrittenMidi(note.MidiNote);
         int octave = writtenMidi / 12 - 1;
         int pitchClass = (writtenMidi % 12 + 12) % 12;
         int diatonicClass = PitchClassToDiatonic[pitchClass];
@@ -144,23 +141,6 @@ public class StaffRenderer
         DrawNoteAt(canvas, note, cx, mode, 0.3, true);
     }
 
-    private int NormalizeMidiForRendering(int midi)
-    {
-        if (!IncludeOctaves)
-        {
-            // Keep notes within visible staff range
-            if (midi < MinWrittenMidi)
-            {
-                midi = MinWrittenMidi;
-            }
-            else if (midi > MaxWrittenMidi)
-            {
-                midi = MaxWrittenMidi;
-            }
-        }
-        return midi;
-    }
-
     private void DrawNote(Canvas canvas, Note note, AccidentalMode mode)
     {
         double cx = GetNoteX(mode);
@@ -170,9 +150,7 @@ public class StaffRenderer
     private void DrawNoteAt(Canvas canvas, Note note, double cx, AccidentalMode mode, double opacity, bool isPreview)
     {
         double top = StaffTop;
-        int midi = NormalizeMidiForRendering(note.MidiNote);
-        Note normalizedNote = new Note(midi);
-        int pos = WrittenStaffPosition(normalizedNote);
+        int pos = WrittenStaffPosition(note);
         double noteY = top + 4 * Ls - pos * (Ls / 2.0);
 
         if (pos < 0)
@@ -248,13 +226,7 @@ public class StaffRenderer
 
         if (ShowNoteNames && !isPreview)
         {
-            int pc = (normalizedNote.MidiNote % 12 + 12) % 12;
-            string name = mode switch
-            {
-                AccidentalMode.Flat => $"{FlatNames[pc]}{normalizedNote.Octave}",
-                AccidentalMode.Sharp => $"{SharpNames[pc]}{normalizedNote.Octave}",
-                _ => normalizedNote.FullName
-            };
+            string name = NoteDisplay.Format(note, ToAccidentalDisplay(mode), IncludeOctaves);
             var nameTb = new TextBlock
             {
                 Text = name,
@@ -266,6 +238,16 @@ public class StaffRenderer
             Canvas.SetTop(nameTb, noteY - 10);
             canvas.Children.Add(nameTb);
         }
+    }
+
+    private static NoteDisplay.AccidentalDisplay ToAccidentalDisplay(AccidentalMode mode)
+    {
+        return mode switch
+        {
+            AccidentalMode.Flat => NoteDisplay.AccidentalDisplay.Flat,
+            AccidentalMode.Sharp => NoteDisplay.AccidentalDisplay.Sharp,
+            _ => NoteDisplay.AccidentalDisplay.Natural
+        };
     }
 
     private void DrawStaff(Canvas canvas)

@@ -19,6 +19,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private readonly DispatcherTimer _flashTimer;
 
     private Note? _currentNote;
+    private Note? _hoverNote;
     private FretboardState _fretboardState = FretboardState.Hidden;
 
     public event Action? BackToMenuRequested;
@@ -51,7 +52,6 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             SetFretboardState(FretboardState.CelebratingCorrect);
             StatusText.Text = $"Correct! That was {target.FullName} \u2713";
-            _flashTimer.Start();
         }
         else
         {
@@ -84,6 +84,58 @@ public partial class TeacherModeView : UserControl, IGameMode
         }
     }
 
+    private void StaffCanvas_MouseMove(object sender, MouseEventArgs e)
+    {
+        double y = e.GetPosition(StaffCanvas).Y;
+        Note? hoverNote = StaffRenderer.NoteFromY(y);
+        if (hoverNote == null)
+        {
+            if (_hoverNote != null)
+            {
+                _hoverNote = null;
+                RerenderStaff();
+            }
+            return;
+        }
+
+        if (_hoverNote == null || hoverNote.Value.MidiNote != _hoverNote.Value.MidiNote)
+        {
+            _hoverNote = hoverNote;
+            RerenderStaff();
+        }
+    }
+
+    private void StaffCanvas_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (_hoverNote != null)
+        {
+            _hoverNote = null;
+            RerenderStaff();
+        }
+    }
+
+    private void RerenderStaff()
+    {
+        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
+
+        if (_currentNote.HasValue && _hoverNote.HasValue)
+        {
+            _staff.RenderWithPreview(StaffCanvas, _currentNote.Value, _hoverNote.Value);
+        }
+        else if (_currentNote.HasValue)
+        {
+            _staff.Render(StaffCanvas, _currentNote.Value);
+        }
+        else if (_hoverNote.HasValue)
+        {
+            _staff.RenderEmptyWithPreview(StaffCanvas, _hoverNote.Value);
+        }
+        else
+        {
+            _staff.RenderEmpty(StaffCanvas);
+        }
+    }
+
     private void RandomBtn_Click(object sender, RoutedEventArgs e)
     {
         PickRandomNote();
@@ -97,11 +149,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void ShowNoteNamesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.ShowNoteNames = ShowNoteNamesCheckBox.IsChecked == true;
-        if (_currentNote.HasValue)
-        {
-            _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
-            _staff.Render(StaffCanvas, _currentNote.Value);
-        }
+        RerenderStaff();
     }
 
     private void PickRandomNote()
@@ -113,6 +161,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     {
         _flashTimer.Stop();
         _currentNote = note;
+        _hoverNote = null;
         SetFretboardState(FretboardState.Hidden);
 
         _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;

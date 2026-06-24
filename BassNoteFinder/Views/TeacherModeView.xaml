@@ -23,7 +23,9 @@
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <Canvas x:Name="StaffCanvas" Width="500" Height="280" Margin="10"
                                 Background="Transparent"
-                                MouseLeftButtonDown="StaffCanvas_MouseLeftButtonDown"/>
+                                MouseLeftButtonDown="StaffCanvas_MouseLeftButtonDown"
+                                MouseMove="StaffCanvas_MouseMove"
+                                MouseLeave="StaffCanvas_MouseLeave"/>
                     </ScrollViewer>
                 </DockPanel>
             </Border>

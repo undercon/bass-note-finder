@@ -22,6 +22,8 @@ public class StaffRenderer
 
     private static readonly Brush NoteNameBrush = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
 
+    private static readonly Brush PreviewBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
+
     private static readonly int[] DiatonicToPitchClass = { 0, 2, 4, 5, 7, 9, 11 };
 
     public double StaffWidth { get; set; } = 500;
@@ -47,17 +49,77 @@ public class StaffRenderer
         return new Note(midi);
     }
 
+    public void Render(Canvas canvas, Note note)
+    {
+        canvas.Children.Clear();
+        DrawStaff(canvas);
+        DrawNote(canvas, note);
+    }
+
     public void RenderEmpty(Canvas canvas)
     {
         canvas.Children.Clear();
         DrawStaff(canvas);
     }
 
-    public void Render(Canvas canvas, Note note)
+    public void RenderEmptyWithPreview(Canvas canvas, Note previewNote)
     {
         canvas.Children.Clear();
         DrawStaff(canvas);
+        DrawPreviewNote(canvas, previewNote);
+    }
 
+    public void RenderWithPreview(Canvas canvas, Note note, Note previewNote)
+    {
+        canvas.Children.Clear();
+        DrawStaff(canvas);
+        DrawNote(canvas, note);
+        DrawPreviewNote(canvas, previewNote);
+    }
+
+    private void DrawPreviewNote(Canvas canvas, Note note)
+    {
+        double cx = StaffWidth / 2;
+        double top = StaffTop;
+
+        int pos = note.StaffPosition();
+        double noteY = top + 4 * Ls - pos * (Ls / 2.0);
+
+        if (pos < 0)
+        {
+            int firstLedger = -2;
+            int lastLedger = pos % 2 == 0 ? pos : pos - 1;
+            for (int lp = firstLedger; lp >= lastLedger; lp -= 2)
+            {
+                double ly = top + 4 * Ls - lp * (Ls / 2.0);
+                DrawLedger(canvas, cx, ly);
+            }
+        }
+        else if (pos > 8)
+        {
+            int firstLedger = 10;
+            int lastLedger = pos % 2 == 0 ? pos : pos + 1;
+            for (int lp = firstLedger; lp <= lastLedger; lp += 2)
+            {
+                double ly = top + 4 * Ls - lp * (Ls / 2.0);
+                DrawLedger(canvas, cx, ly);
+            }
+        }
+
+        var ellipse = new Ellipse
+        {
+            Width = NoteW, Height = NoteH,
+            Fill = PreviewBrush,
+            Stroke = PreviewBrush, StrokeThickness = 1,
+            Opacity = 0.3
+        };
+        Canvas.SetLeft(ellipse, cx - NoteW / 2);
+        Canvas.SetTop(ellipse, noteY - NoteH / 2);
+        canvas.Children.Add(ellipse);
+    }
+
+    private void DrawNote(Canvas canvas, Note note)
+    {
         double cx = StaffWidth / 2;
         double top = StaffTop;
 

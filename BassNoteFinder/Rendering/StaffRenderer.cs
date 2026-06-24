@@ -8,11 +8,11 @@ namespace BassNoteFinder.Rendering;
 
 public class StaffRenderer
 {
-    private const double Ls = 14;
-    private const double NoteW = 14;
-    private const double NoteH = 10;
-    private const double LedgerLen = 18;
-    private const double StaffTop = 50;
+    private const double Ls = 20;
+    private const double NoteW = 20;
+    private const double NoteH = 14;
+    private const double LedgerLen = 26;
+    private const double StaffTop = 60;
 
     private static readonly Brush StaffLineBrush = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
     private static readonly Brush ClefBrush = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
@@ -20,9 +20,12 @@ public class StaffRenderer
     private static readonly Brush AccidentalBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
     private static readonly Brush HighlightBrush = new SolidColorBrush(Color.FromRgb(0x0E, 0x63, 0x9C));
 
+    private static readonly Brush NoteNameBrush = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
+
     private static readonly int[] DiatonicToPitchClass = { 0, 2, 4, 5, 7, 9, 11 };
 
-    public double StaffWidth { get; set; } = 400;
+    public double StaffWidth { get; set; } = 500;
+    public bool ShowNoteNames { get; set; }
 
     public static Note? NoteFromY(double y)
     {
@@ -113,6 +116,20 @@ public class StaffRenderer
         Canvas.SetLeft(ellipse, cx - NoteW / 2);
         Canvas.SetTop(ellipse, noteY - NoteH / 2);
         canvas.Children.Add(ellipse);
+
+        if (ShowNoteNames)
+        {
+            var name = new TextBlock
+            {
+                Text = note.FullName,
+                FontSize = 14,
+                FontWeight = FontWeights.Bold,
+                Foreground = NoteNameBrush
+            };
+            Canvas.SetLeft(name, cx + NoteW / 2 + 8);
+            Canvas.SetTop(name, noteY - 10);
+            canvas.Children.Add(name);
+        }
     }
 
     private void DrawStaff(Canvas canvas)

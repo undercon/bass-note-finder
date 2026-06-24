@@ -8,10 +8,10 @@ namespace BassNoteFinder.Rendering;
 
 public class FretboardRenderer
 {
-    private const double StringSpacing = 28;
-    private const double FretSpacing = 40;
-    private const double NutWidth = 6;
-    private const double MarkerSize = 8;
+    private const double StringSpacing = 34;
+    private const double FretSpacing = 48;
+    private const double NutWidth = 8;
+    private const double MarkerSize = 10;
     private const int NumFrets = 12;
 
     private static readonly int[] OpenNotes = { 43, 38, 33, 28 };

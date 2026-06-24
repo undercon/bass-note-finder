@@ -70,7 +70,7 @@ public partial class TeacherModeView : UserControl, IGameMode
 
     private void TeacherModeView_Loaded(object sender, RoutedEventArgs e)
     {
-        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 380;
+        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
         _staff.RenderEmpty(StaffCanvas);
     }
 
@@ -94,6 +94,16 @@ public partial class TeacherModeView : UserControl, IGameMode
         BackToMenuRequested?.Invoke();
     }
 
+    private void ShowNoteNamesCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        _staff.ShowNoteNames = ShowNoteNamesCheckBox.IsChecked == true;
+        if (_currentNote.HasValue)
+        {
+            _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
+            _staff.Render(StaffCanvas, _currentNote.Value);
+        }
+    }
+
     private void PickRandomNote()
     {
         SelectNote(_generator.RandomNote());
@@ -105,7 +115,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         _currentNote = note;
         SetFretboardState(FretboardState.Hidden);
 
-        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 380;
+        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
         _staff.Render(StaffCanvas, note);
 
         StatusText.Text = $"Find this note on your bass: {note.FullName}";

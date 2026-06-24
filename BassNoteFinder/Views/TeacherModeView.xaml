@@ -21,7 +21,7 @@
                     <TextBlock DockPanel.Dock="Top" Text="Staff" FontWeight="SemiBold"
                                HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="StaffCanvas" Width="380" Height="200" Margin="10"
+                        <Canvas x:Name="StaffCanvas" Width="500" Height="280" Margin="10"
                                 Background="Transparent"
                                 MouseLeftButtonDown="StaffCanvas_MouseLeftButtonDown"/>
                     </ScrollViewer>
@@ -33,7 +33,7 @@
                         <TextBlock DockPanel.Dock="Top" Text="Fretboard" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
                         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                            <Canvas x:Name="FretboardCanvas" Width="600" Height="160" Margin="10" Background="#1E1E1E"/>
+                            <Canvas x:Name="FretboardCanvas" Width="720" Height="200" Margin="10" Background="#1E1E1E"/>
                         </ScrollViewer>
                     </DockPanel>
                     <StackPanel x:Name="OverlayPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -47,8 +47,12 @@
         </UniformGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+            <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show Note Names"
+                     VerticalAlignment="Center" Margin="5,0" Foreground="#CCC"
+                     Checked="ShowNoteNamesCheckBox_Changed"
+                     Unchecked="ShowNoteNamesCheckBox_Changed"/>
             <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
-                    Margin="5,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
+                    Margin="15,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>
             <Button x:Name="BackBtn" Content="Back to Menu" Width="110" Click="BackBtn_Click"
                     Margin="5,0" Padding="10,6" Background="#555" Foreground="White"

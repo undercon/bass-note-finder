@@ -13,7 +13,7 @@ public partial class TeacherModeView : UserControl, IGameMode
 {
     private enum FretboardState { Hidden, FlashingWrong, CelebratingCorrect }
 
-    private readonly NoteGenerator _generator = new(28, 55);
+    private readonly NoteGenerator _generator = new(28, 48);
     private readonly StaffRenderer _staff = new();
     private readonly FretboardRenderer _fretboardRenderer = new();
     private readonly DispatcherTimer _flashTimer;
@@ -48,15 +48,18 @@ public partial class TeacherModeView : UserControl, IGameMode
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
 
+        var writtenTarget = new Note(target.MidiNote + 12);
+        var writtenPlayed = new Note(note.MidiNote + 12);
+
         if (note.MidiNote == target.MidiNote)
         {
             SetFretboardState(FretboardState.CelebratingCorrect);
-            StatusText.Text = $"Correct! That was {target.FullName} \u2713";
+            StatusText.Text = $"Correct! That was {writtenTarget.FullName} \u2713";
         }
         else
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {note.FullName}.";
+            StatusText.Text = $"Not quite. You played {writtenPlayed.FullName}.";
             _flashTimer.Start();
         }
     }
@@ -167,7 +170,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
         _staff.Render(StaffCanvas, note);
 
-        StatusText.Text = $"Find this note on your bass: {note.FullName}";
+        var writtenNote = new Note(note.MidiNote + 12);
+        StatusText.Text = $"Find this note on your bass: {writtenNote.FullName}";
     }
 
     private void SetFretboardState(FretboardState state, Note? studentNote = null)

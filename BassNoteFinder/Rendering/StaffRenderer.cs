@@ -24,6 +24,11 @@ public class StaffRenderer
 
     private static readonly Brush PreviewBrush = new SolidColorBrush(Color.FromRgb(0x4F, 0xC3, 0xF7));
 
+    private const int WrittenOctaveOffset = 12;
+    private const int MinWrittenMidi = 40;
+    private const int MaxWrittenMidi = 67;
+    private const int MaxRandomWrittenMidi = 60;
+
     private static readonly int[] DiatonicToPitchClass = { 0, 2, 4, 5, 7, 9, 11 };
 
     public double StaffWidth { get; set; } = 500;
@@ -43,10 +48,10 @@ public class StaffRenderer
         int octave = (int)Math.Floor((double)temp / 7) + 2;
 
         int pitchClass = DiatonicToPitchClass[diatonicClass];
-        int midi = (octave + 1) * 12 + pitchClass;
+        int writtenMidi = (octave + 1) * 12 + pitchClass;
 
-        if (midi < 28 || midi > 55) return null;
-        return new Note(midi);
+        if (writtenMidi < MinWrittenMidi || writtenMidi > MaxWrittenMidi) return null;
+        return new Note(writtenMidi - WrittenOctaveOffset);
     }
 
     public void Render(Canvas canvas, Note note)
@@ -77,12 +82,22 @@ public class StaffRenderer
         DrawPreviewNote(canvas, previewNote);
     }
 
+    private static int WrittenStaffPosition(Note note)
+    {
+        int writtenMidi = note.MidiNote + WrittenOctaveOffset;
+        int octave = writtenMidi / 12 - 1;
+        int pitchClass = (writtenMidi % 12 + 12) % 12;
+        int[] diatonicMap = { 0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6 };
+        int diatonicClass = diatonicMap[pitchClass];
+        return (diatonicClass - 4) + 7 * (octave - 2);
+    }
+
     private void DrawPreviewNote(Canvas canvas, Note note)
     {
         double cx = StaffWidth / 2;
         double top = StaffTop;
 
-        int pos = note.StaffPosition();
+        int pos = WrittenStaffPosition(note);
         double noteY = top + 4 * Ls - pos * (Ls / 2.0);
 
         if (pos < 0)
@@ -123,7 +138,7 @@ public class StaffRenderer
         double cx = StaffWidth / 2;
         double top = StaffTop;
 
-        int pos = note.StaffPosition();
+        int pos = WrittenStaffPosition(note);
         double noteY = top + 4 * Ls - pos * (Ls / 2.0);
 
         if (pos < 0)
@@ -181,9 +196,10 @@ public class StaffRenderer
 
         if (ShowNoteNames)
         {
+            var writtenNote = new Note(note.MidiNote + WrittenOctaveOffset);
             var name = new TextBlock
             {
-                Text = note.FullName,
+                Text = writtenNote.FullName,
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
                 Foreground = NoteNameBrush

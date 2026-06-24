@@ -228,13 +228,12 @@ public class StaffRenderer
 
         if (ShowNoteNames && !isPreview)
         {
-            var writtenNote = new Note(note.MidiNote + WrittenOctaveOffset);
-            int pc = (writtenNote.MidiNote % 12 + 12) % 12;
+            int pc = (note.MidiNote % 12 + 12) % 12;
             string name = mode switch
             {
-                AccidentalMode.Flat => $"{FlatNames[pc]}{writtenNote.Octave}",
-                AccidentalMode.Sharp => $"{SharpNames[pc]}{writtenNote.Octave}",
-                _ => writtenNote.FullName
+                AccidentalMode.Flat => $"{FlatNames[pc]}{note.Octave}",
+                AccidentalMode.Sharp => $"{SharpNames[pc]}{note.Octave}",
+                _ => note.FullName
             };
             var nameTb = new TextBlock
             {

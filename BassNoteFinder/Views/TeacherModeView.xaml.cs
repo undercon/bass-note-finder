@@ -50,8 +50,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
 
-        var writtenTarget = new Note(target.MidiNote + 12);
-        var writtenPlayed = new Note(note.MidiNote + 12);
+        var writtenTarget = target;
+        var writtenPlayed = note;
 
         if (note.MidiNote == target.MidiNote)
         {
@@ -170,8 +170,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             if (ShowStatusNoteNameCheckBox.IsChecked == true)
             {
-                var writtenNote = new Note(_currentNote.Value.MidiNote + 12);
-                StatusText.Text = $"Looking for: {writtenNote.FullName}";
+                StatusText.Text = $"Looking for: {_currentNote.Value.FullName}";
                 StatusText.FontSize = 20;
                 StatusText.FontWeight = FontWeights.Bold;
                 StatusText.Foreground = Brushes.White;
@@ -272,8 +271,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 OverlayPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    var written = new Note(studentNote.Value.MidiNote + 12);
-                    OverlayIcon.Text = written.FullName;
+                    OverlayIcon.Text = studentNote.Value.FullName;
                     OverlayIcon.FontSize = 36;
                     OverlayIcon.Foreground = Brushes.LimeGreen;
                     OverlayText.Text = "Correct!";

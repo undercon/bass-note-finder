@@ -25,6 +25,12 @@ public class AudioCaptureService : IDisposable
     public event Action? PitchLost;
     public event Action<string>? ErrorOccurred;
 
+    public bool PreferHigherOctave
+    {
+        get => _pitchDetector.PreferHigherOctave;
+        set => _pitchDetector.PreferHigherOctave = value;
+    }
+
     public AudioCaptureService(int sampleRate = 44100, int bufferSize = 8192)
     {
         SampleRate = sampleRate;

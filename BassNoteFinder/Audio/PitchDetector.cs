@@ -8,6 +8,7 @@ public class PitchDetector
     private readonly int _sampleRate;
     private readonly int _minLag;
     private readonly int _maxLag;
+    public bool PreferHigherOctave { get; set; } = true;
 
     public PitchDetector(int sampleRate = 44100, int bufferSize = 8192)
     {
@@ -108,7 +109,7 @@ public class PitchDetector
         int selectedTau = strongest.tau;
         double selectedFreq = (double)_sampleRate / selectedTau;
 
-        if (selectedFreq < HarmonicFreqThreshold)
+        if (PreferHigherOctave && selectedFreq < HarmonicFreqThreshold)
         {
             foreach (var (tau, value) in peaks)
             {

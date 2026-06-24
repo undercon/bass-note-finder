@@ -36,6 +36,7 @@ public class StaffRenderer
     public double StaffWidth { get; set; } = 500;
     public bool ShowNoteNames { get; set; }
     public bool IncludeAccidentals { get; set; }
+    public bool IncludeOctaves { get; set; }
 
     private double CenterX => StaffWidth / 2;
     private double FlatX => CenterX - ColumnOffset;
@@ -143,6 +144,23 @@ public class StaffRenderer
         DrawNoteAt(canvas, note, cx, mode, 0.3, true);
     }
 
+    private int NormalizeMidiForRendering(int midi)
+    {
+        if (!IncludeOctaves)
+        {
+            // Keep notes within visible staff range
+            if (midi < MinWrittenMidi)
+            {
+                midi = MinWrittenMidi;
+            }
+            else if (midi > MaxWrittenMidi)
+            {
+                midi = MaxWrittenMidi;
+            }
+        }
+        return midi;
+    }
+
     private void DrawNote(Canvas canvas, Note note, AccidentalMode mode)
     {
         double cx = GetNoteX(mode);
@@ -152,7 +170,9 @@ public class StaffRenderer
     private void DrawNoteAt(Canvas canvas, Note note, double cx, AccidentalMode mode, double opacity, bool isPreview)
     {
         double top = StaffTop;
-        int pos = WrittenStaffPosition(note);
+        int midi = NormalizeMidiForRendering(note.MidiNote);
+        Note normalizedNote = new Note(midi);
+        int pos = WrittenStaffPosition(normalizedNote);
         double noteY = top + 4 * Ls - pos * (Ls / 2.0);
 
         if (pos < 0)
@@ -228,12 +248,12 @@ public class StaffRenderer
 
         if (ShowNoteNames && !isPreview)
         {
-            int pc = (note.MidiNote % 12 + 12) % 12;
+            int pc = (normalizedNote.MidiNote % 12 + 12) % 12;
             string name = mode switch
             {
-                AccidentalMode.Flat => $"{FlatNames[pc]}{note.Octave}",
-                AccidentalMode.Sharp => $"{SharpNames[pc]}{note.Octave}",
-                _ => note.FullName
+                AccidentalMode.Flat => $"{FlatNames[pc]}{normalizedNote.Octave}",
+                AccidentalMode.Sharp => $"{SharpNames[pc]}{normalizedNote.Octave}",
+                _ => normalizedNote.FullName
             };
             var nameTb = new TextBlock
             {

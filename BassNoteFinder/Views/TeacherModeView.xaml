@@ -54,14 +54,14 @@
                       IsChecked="False"
                       Checked="ShowNoteNamesCheckBox_Changed"
                       Unchecked="ShowNoteNamesCheckBox_Changed"/>
-            <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
+            <CheckBox x:Name="IncludeOctavesCheckBox" Content="Include Octaves"
                       VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
-                      Checked="IncludeAccidentalsCheckBox_Changed"
-                      Unchecked="IncludeAccidentalsCheckBox_Changed"/>
+                      Checked="IncludeOctavesCheckBox_Changed"
+                      Unchecked="IncludeOctavesCheckBox_Changed"/>
             <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
                     Margin="15,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>
-            <Button x:Name="BackBtn" Content="Back to Menu" Width="110" Click="BackBtn_Click"
+            <Button x:Name="BackToModeSelectionBtn" Content="Mode Selection" Width="110" Click="BackToModeSelectionBtn_Click"
                     Margin="5,0" Padding="10,6" Background="#555" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>
         </StackPanel>

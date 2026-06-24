@@ -25,6 +25,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private FretboardState _fretboardState = FretboardState.Hidden;
 
     public event Action? BackToMenuRequested;
+    public event Action<bool>? IncludeOctavesChanged;
 
     public TeacherModeView()
     {
@@ -137,7 +138,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         PickRandomNote();
     }
 
-    private void BackBtn_Click(object sender, RoutedEventArgs e)
+    private void BackToModeSelectionBtn_Click(object sender, RoutedEventArgs e)
     {
         BackToMenuRequested?.Invoke();
     }
@@ -149,14 +150,12 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
-    private void IncludeAccidentalsCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void IncludeOctavesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        _staff.IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true;
-        if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
-        {
-            _currentMode = StaffRenderer.AccidentalMode.Natural;
-            _hoverMode = StaffRenderer.AccidentalMode.Natural;
-        }
+        IncludeOctavesChanged?.Invoke(IncludeOctavesCheckBox.IsChecked == true);
+        _currentMode = StaffRenderer.AccidentalMode.Natural;
+        _hoverMode = _currentMode;
+        UpdateStatusText();
         RerenderStaff();
     }
 
@@ -263,8 +262,8 @@ public partial class TeacherModeView : UserControl, IGameMode
                 break;
 
             case FretboardState.CelebratingCorrect:
-                FretboardPanel.Visibility = Visibility.Hidden;
                 OverlayPanel.Visibility = Visibility.Visible;
+                FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
                     OverlayIcon.Text = studentNote.Value.FullName;
@@ -272,6 +271,8 @@ public partial class TeacherModeView : UserControl, IGameMode
                     OverlayIcon.Foreground = Brushes.LimeGreen;
                     OverlayText.Text = "Correct!";
                     OverlayText.Foreground = Brushes.LimeGreen;
+                    _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
+                        Color.FromRgb(0xFF, 0x32, 0x32));
                 }
                 else
                 {

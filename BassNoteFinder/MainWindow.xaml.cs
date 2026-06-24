@@ -72,6 +72,7 @@ public partial class MainWindow : Window
     {
         var view = new TeacherModeView();
         view.BackToMenuRequested += ShowMenu;
+        view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         MainContent.Content = view;
         _activeMode = view;
         _activeMode.OnActivate();

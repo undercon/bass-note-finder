@@ -108,7 +108,24 @@ public class PitchDetector
         int selectedTau = strongest.tau;
         double selectedFreq = (double)_sampleRate / selectedTau;
 
-        if (selectedFreq > HarmonicFreqThreshold)
+        if (selectedFreq < HarmonicFreqThreshold)
+        {
+            foreach (var (tau, value) in peaks)
+            {
+                double ratio = (double)selectedTau / tau;
+                if (Math.Abs(ratio - 2.0) < 0.15 && tau < selectedTau)
+                {
+                    double candidateFreq = (double)_sampleRate / tau;
+                    if (candidateFreq > HarmonicFreqThreshold)
+                    {
+                        selectedTau = tau;
+                        selectedFreq = candidateFreq;
+                        break;
+                    }
+                }
+            }
+        }
+        else if (selectedFreq > HarmonicFreqThreshold)
         {
             foreach (var (tau, value) in peaks)
             {

@@ -1,5 +1,6 @@
 using BassNoteFinder.MusicTheory;
 using BassNoteFinder.Rendering;
+using BassNoteFinder.Audio;
 using Xunit;
 
 namespace BassNoteFinder.Tests;
@@ -26,6 +27,56 @@ public class NoteDisplayTests
     {
         string actual = NoteDisplay.Format(new Note(midi), accidental, includeOctave);
         Assert.Equal(expected, actual);
+    }
+}
+
+public class NoteMathTests
+{
+    [Fact]
+    public void ClosestPitchClassToReference_MapsEquivalentPitchNearReference()
+    {
+        Note detectedHarmonic = new(31); // G1
+        Note target = new(43); // G2
+
+        Note resolved = Note.ClosestPitchClassToReference(detectedHarmonic, target);
+
+        Assert.Equal(43, resolved.MidiNote);
+    }
+
+    [Theory]
+    [InlineData(1)]   // C#
+    [InlineData(3)]   // D#
+    [InlineData(6)]   // F#
+    [InlineData(8)]   // G#
+    [InlineData(10)]  // A#
+    public void IsSharp_ReturnsTrue_ForSharpPitchClasses(int pitchClass)
+    {
+        Assert.True(new Note(pitchClass).IsSharp);
+    }
+
+    [Theory]
+    [InlineData(0)]   // C
+    [InlineData(2)]   // D
+    [InlineData(4)]   // E
+    [InlineData(5)]   // F
+    [InlineData(7)]   // G
+    [InlineData(9)]   // A
+    [InlineData(11)]  // B
+    public void IsSharp_ReturnsFalse_ForNaturalPitchClasses(int pitchClass)
+    {
+        Assert.False(new Note(pitchClass).IsSharp);
+    }
+
+    [Fact]
+    public void IsValid_ReturnsFalse_ForSentinelNote()
+    {
+        Assert.False(new Note(-1).IsValid);
+    }
+
+    [Fact]
+    public void IsValid_ReturnsTrue_ForNormalNote()
+    {
+        Assert.True(new Note(40).IsValid);
     }
 }
 
@@ -69,9 +120,9 @@ public class FretboardRendererTests
 {
     [Theory]
     [InlineData(28, 3, 0)]
-    [InlineData(33, 2, 0)]
-    [InlineData(38, 1, 0)]
-    [InlineData(43, 0, 0)]
+    [InlineData(33, 3, 5)]
+    [InlineData(38, 2, 5)]
+    [InlineData(43, 1, 5)]
     [InlineData(40, 1, 2)]
     public void FindNotePosition_ReturnsExpectedStringAndFret(int midi, int expectedStringIndex, int expectedFret)
     {
@@ -88,6 +139,17 @@ public class FretboardRendererTests
 
         Assert.Equal(-1, stringIndex);
         Assert.Equal(99, fret);
+    }
+
+    [Fact]
+    public void FindNotePosition_WithStaffHint_UsesClosestEquivalentPitchToTarget()
+    {
+        var (stringIndex, fret) = FretboardRenderer.FindNotePosition(
+            note: new Note(45),
+            staffReferenceNote: new Note(33));
+
+        Assert.Equal(3, stringIndex);
+        Assert.Equal(5, fret);
     }
 }
 
@@ -125,5 +187,80 @@ public class NoteGeneratorTests
                 StaffRenderer.AccidentalMode.Flat
             });
         }
+    }
+}
+
+public class PitchDetectorOctaveTests
+{
+    [Fact]
+    public void DetectPitch_StrongSecondHarmonicNearE1_ResolvesToE1()
+    {
+        const int sampleRate = 44100;
+        const int bufferSize = 8192;
+
+        float[] samples = GenerateSignal(
+            sampleRate,
+            bufferSize,
+            41.2034,
+            (1.0, 1.00),
+            (2.0, 1.45),
+            (3.0, 0.30));
+
+        var detector = new PitchDetector(sampleRate, bufferSize)
+        {
+            PreferHigherOctave = false
+        };
+
+        double pitch = detector.DetectPitch(samples);
+        Assert.True(pitch > 0);
+
+        Note.CentsOffFromFrequency(pitch, out var note);
+        Assert.Equal("E1", note.FullName);
+    }
+
+    [Fact]
+    public void DetectPitch_A1Fundamental_RemainsA1()
+    {
+        const int sampleRate = 44100;
+        const int bufferSize = 8192;
+
+        float[] samples = GenerateSignal(
+            sampleRate,
+            bufferSize,
+            55.0,
+            (1.0, 1.00),
+            (2.0, 0.40),
+            (3.0, 0.20));
+
+        var detector = new PitchDetector(sampleRate, bufferSize)
+        {
+            PreferHigherOctave = false
+        };
+
+        double pitch = detector.DetectPitch(samples);
+        Assert.True(pitch > 0);
+
+        Note.CentsOffFromFrequency(pitch, out var note);
+        Assert.Equal("A1", note.FullName);
+    }
+
+    private static float[] GenerateSignal(int sampleRate, int sampleCount, double baseFrequency, params (double multiple, double amplitude)[] harmonics)
+    {
+        var samples = new float[sampleCount];
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            double time = i / (double)sampleRate;
+            double value = 0;
+
+            foreach (var (multiple, amplitude) in harmonics)
+            {
+                value += amplitude * Math.Sin(2.0 * Math.PI * baseFrequency * multiple * time);
+            }
+
+            samples[i] = (float)(value * 0.25);
+        }
+
+        return samples;
     }
 }

@@ -19,7 +19,7 @@ public class FretboardRenderer
     public double TotalWidth => NutWidth + (NumFrets + 1) * FretSpacing + 30;
     public double TotalHeight => 5 * StringSpacing + 40;
 
-    public void Render(Canvas canvas, Note? targetNote = null, Color? highlightColor = null)
+    public void Render(Canvas canvas, Note? targetNote = null, Color? highlightColor = null, Note? staffReferenceNote = null)
     {
         canvas.Children.Clear();
 
@@ -127,10 +127,10 @@ public class FretboardRenderer
 
         if (targetNote.HasValue)
         {
-            var (str, fret) = FindNotePosition(targetNote.Value);
+            var (str, fret) = FindNotePosition(targetNote.Value, staffReferenceNote);
             if (str >= 0)
             {
-                double sx = nutEnd + (fret + 0.5) * FretSpacing;
+                double sx = nutEnd + (fret - 0.5) * FretSpacing;
                 double sy = y0 + str * StringSpacing;
                 if (fret == 0)
                 {
@@ -175,20 +175,38 @@ public class FretboardRenderer
         }
     }
 
-    public static (int stringIndex, int fret) FindNotePosition(Note note)
+    public static (int stringIndex, int fret) FindNotePosition(Note note, Note? staffReferenceNote = null)
     {
-        int bestStr = -1, bestFret = 99;
+        int midi = note.MidiNote;
+        if (staffReferenceNote.HasValue)
+        {
+            midi = Note.ClosestPitchClassToReference(note, staffReferenceNote.Value).MidiNote;
+        }
+
+        var candidates = new List<(int stringIndex, int fret)>();
 
         for (int s = 0; s < 4; s++)
         {
-            int fret = note.MidiNote - OpenNotes[s];
-            if (fret >= 0 && fret <= NumFrets && fret < bestFret)
+            int fret = midi - OpenNotes[s];
+            if (fret >= 0 && fret <= NumFrets)
             {
-                bestFret = fret;
-                bestStr = s;
+                candidates.Add((s, fret));
             }
         }
 
-        return (bestStr, bestFret);
+        if (candidates.Count == 0)
+        {
+            return (-1, 99);
+        }
+
+        if (candidates.Any(c => c.fret == 5))
+        {
+            return candidates.First(c => c.fret == 5);
+        }
+
+        return candidates
+            .OrderBy(c => c.fret)
+            .ThenByDescending(c => c.stringIndex)
+            .First();
     }
 }

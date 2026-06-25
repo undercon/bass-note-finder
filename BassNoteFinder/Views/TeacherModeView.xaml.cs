@@ -51,9 +51,10 @@ public partial class TeacherModeView : UserControl, IGameMode
     {
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
+        Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target);
         bool includeOctaves = IncludeOctavesCheckBox.IsChecked == true;
 
-        if (note.MidiNote == target.MidiNote)
+        if (evaluatedNote.MidiNote == target.MidiNote)
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
@@ -63,8 +64,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         }
         else
         {
-            SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
+            SetFretboardState(FretboardState.FlashingWrong, evaluatedNote);
+            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(evaluatedNote, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.OrangeRed;
@@ -269,7 +270,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 if (studentNote.HasValue)
                 {
                     _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
-                        Color.FromRgb(0xFF, 0x32, 0x32));
+                        Color.FromRgb(0xFF, 0x32, 0x32), _currentNote);
                 }
                 break;
 
@@ -311,5 +312,25 @@ public partial class TeacherModeView : UserControl, IGameMode
             StaffRenderer.AccidentalMode.Sharp => NoteDisplay.AccidentalDisplay.Sharp,
             _ => NoteDisplay.AccidentalDisplay.Natural
         };
+    }
+
+    private static Note EvaluateDetectedNoteAgainstTarget(Note detected, Note target)
+    {
+        // Wrong pitch class entirely — report as-is
+        if (detected.PitchClass != target.PitchClass)
+            return detected;
+
+        // Exact match
+        if (detected.MidiNote == target.MidiNote)
+            return detected;
+
+        // Accept harmonic correction only for exactly one octave off (±12 semitones).
+        // This is the only physically plausible single-harmonic detection error:
+        // detector picks up the 2nd harmonic (octave above) or sub-octave (octave below).
+        // Two or more octaves off means the player genuinely played the wrong octave.
+        if (Math.Abs(detected.MidiNote - target.MidiNote) == 12)
+            return target;
+
+        return detected;
     }
 }

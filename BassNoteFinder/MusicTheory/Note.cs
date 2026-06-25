@@ -6,7 +6,14 @@ public readonly record struct Note
     private static readonly string[] FlatNames = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
     private static readonly int[] DiatonicMap = { 0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6 };
 
+    // Pitch classes that are sharps/naturals-with-a-sharp-name: C#, D#, F#, G#, A#
+    private static readonly bool[] SharpPitchClasses = { false, true, false, true, false, false, true, false, true, false, true, false };
+
     public int MidiNote { get; }
+
+    /// <summary>Returns false for the sentinel invalid note (MidiNote &lt; 0).</summary>
+    public bool IsValid => MidiNote >= 0;
+
     public int Octave => MidiNote / 12 - 1;
     public int PitchClass => (MidiNote % 12 + 12) % 12;
     public int DiatonicClass => DiatonicMap[PitchClass];
@@ -15,6 +22,9 @@ public readonly record struct Note
     public string NameFlat => FlatNames[PitchClass];
     public string FullName => $"{Names[PitchClass]}{Octave}";
     public string FullNameFlat => $"{FlatNames[PitchClass]}{Octave}";
+
+    /// <summary>True when this note's canonical name contains a sharp (C#, D#, F#, G#, A#).</summary>
+    public bool IsSharp => SharpPitchClasses[PitchClass];
 
     public Note(int midiNote)
     {
@@ -37,11 +47,19 @@ public readonly record struct Note
         return (midiFloat - midiRounded) * 100;
     }
 
-    public int StaffPosition()
+    /// <summary>
+    /// Returns the octave equivalent of <paramref name="note"/> whose MIDI number
+    /// is closest to <paramref name="reference"/>. Useful for resolving harmonic
+    /// octave ambiguity relative to a known target.
+    /// </summary>
+    public static Note ClosestPitchClassToReference(Note note, Note reference)
     {
-        return (DiatonicClass - 4) + 7 * (Octave - 2);
+        // PitchClass is already normalised (0–11); no double-normalisation needed.
+        int pc = note.PitchClass;
+        // Find the integer n that minimises |reference.MidiNote - (pc + 12n)|.
+        int n = (int)Math.Round((reference.MidiNote - pc) / 12.0);
+        return new Note(pc + 12 * n);
     }
 
-    public bool IsSharp => Name.Contains('#');
     public override string ToString() => FullName;
 }

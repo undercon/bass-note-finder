@@ -101,6 +101,24 @@ public class PitchDetectorTests
     }
 
     [Fact]
+    public void DetectC3FromRecording_ReturnsC3()
+    {
+        const string fileName = "C3.m4a";
+        const string expectedNote = "C3";
+
+        var result = RunDetectionFullName(fileName, expectedNote);
+        Console.WriteLine($"\n=== {result.FileName} ({expectedNote}) Detection Summary ===");
+        foreach (var (name, count) in result.Counts.OrderByDescending(x => x.Value))
+        {
+            Console.WriteLine($"  {name}: {count}");
+        }
+        Console.WriteLine($"Success rate ({expectedNote}): {result.SuccessRate:F1}%");
+
+        Assert.True(result.Counts.GetValueOrDefault(expectedNote, 0) > 0,
+            $"Expected at least some {expectedNote} detections in {fileName}");
+    }
+
+    [Fact]
     public void DetectE1FromRecording_ReturnsE1NotE2()
     {
         string recordingPath = Path.Combine(AppContext.BaseDirectory, "test_e1.wav");

@@ -10,10 +10,11 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Name="StatusText" 
-                   Text="Click the staff to place a note, or press Random."
-                   FontSize="13" HorizontalAlignment="Center"
-                   Foreground="#AAAAAA" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="0" x:Name="StatusText"
+                    Text="Click the staff to place a note, or press Random."
+                    FontSize="14" HorizontalAlignment="Center"
+                    Foreground="#AAAAAA" Margin="0,0,0,8"
+                    TextAlignment="Center" TextWrapping="Wrap" MinHeight="24"/>
 
         <UniformGrid Grid.Row="1" Rows="1" Columns="2" Margin="0,0,0,10">
             <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
@@ -48,26 +49,26 @@
             </Border>
         </UniformGrid>
 
-<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,10">
             <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show Note Names"
-                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC"
+                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC"
                       IsChecked="False"
                       Checked="ShowNoteNamesCheckBox_Changed"
                       Unchecked="ShowNoteNamesCheckBox_Changed"/>
             <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
-                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
+                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC" IsChecked="False"
                       Checked="IncludeAccidentalsCheckBox_Changed"
                       Unchecked="IncludeAccidentalsCheckBox_Changed"/>
             <CheckBox x:Name="IncludeOctavesCheckBox" Content="Include Octaves"
-                      VerticalAlignment="Center" Margin="5,0" Foreground="#CCC" IsChecked="False"
+                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC" IsChecked="False"
                       Checked="IncludeOctavesCheckBox_Changed"
                       Unchecked="IncludeOctavesCheckBox_Changed"/>
             <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
-                    Margin="15,0" Padding="10,6" Background="#2D8C2D" Foreground="White"
+                    Margin="15,4,5,4" Padding="10,6" Background="#2D8C2D" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>
             <Button x:Name="BackToModeSelectionBtn" Content="Mode Selection" Width="110" Click="BackToModeSelectionBtn_Click"
-                    Margin="5,0" Padding="10,6" Background="#555" Foreground="White"
+                    Margin="5,4" Padding="10,6" Background="#555" Foreground="White"
                     BorderThickness="0" Cursor="Hand"/>
-        </StackPanel>
+        </WrapPanel>
     </Grid>
 </UserControl>

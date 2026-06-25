@@ -57,7 +57,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
-            StatusText.FontSize = 20;
+            StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.Foreground = Brushes.LimeGreen;
         }
@@ -177,14 +177,14 @@ public partial class TeacherModeView : UserControl, IGameMode
             if (ShowNoteNamesCheckBox.IsChecked == true)
             {
                 StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
-                StatusText.FontSize = 20;
+                StatusText.FontSize = 16;
                 StatusText.FontWeight = FontWeights.Bold;
                 StatusText.Foreground = Brushes.White;
             }
             else
             {
                 StatusText.Text = "Find this note on your bass.";
-                StatusText.FontSize = 13;
+                StatusText.FontSize = 14;
                 StatusText.FontWeight = FontWeights.Normal;
                 StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
             }
@@ -192,7 +192,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         else
         {
             StatusText.Text = "Click the staff to place a note, or press Random.";
-            StatusText.FontSize = 13;
+            StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
         }

@@ -52,6 +52,7 @@ public partial class MainWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ShowMenu();
+        RestoreMicCaptureState();
     }
 
     private void ShowMenu()
@@ -131,15 +132,15 @@ public partial class MainWindow : Window
         if (_audio.IsCapturing)
         {
             _audio.StopCapture();
-            ToggleMicBtn.Content = "Start Mic";
-            DetectedNoteText.Text = "--";
+            SetMicUiState(false);
+            PersistMicStartupPreference(false);
         }
         else
         {
             if (_audio.StartCapture(InputCombo.SelectedIndex))
             {
-                ToggleMicBtn.Content = "Stop Mic";
-                DetectedNoteText.Text = "Listening...";
+                SetMicUiState(true);
+                PersistMicStartupPreference(true);
             }
         }
     }
@@ -153,9 +154,52 @@ public partial class MainWindow : Window
             _audio.StopCapture();
             if (!_audio.StartCapture(InputCombo.SelectedIndex))
             {
-                ToggleMicBtn.Content = "Start Mic";
+                SetMicUiState(false);
+                PersistMicStartupPreference(false);
+            }
+            else
+            {
+                SetMicUiState(true);
             }
         }
+    }
+
+    private void RestoreMicCaptureState()
+    {
+        if (!_config.StartMicOnLaunch || InputCombo.Items.Count == 0)
+        {
+            SetMicUiState(false);
+            return;
+        }
+
+        if (_audio.StartCapture(InputCombo.SelectedIndex))
+        {
+            SetMicUiState(true);
+        }
+        else
+        {
+            SetMicUiState(false);
+            PersistMicStartupPreference(false);
+        }
+    }
+
+    private void SetMicUiState(bool isCapturing)
+    {
+        ToggleMicBtn.Content = isCapturing ? "Stop Mic" : "Start Mic";
+        if (!isCapturing)
+        {
+            DetectedNoteText.Text = "--";
+        }
+        else if (DetectedNoteText.Text == "--")
+        {
+            DetectedNoteText.Text = "Listening...";
+        }
+    }
+
+    private void PersistMicStartupPreference(bool startMicOnLaunch)
+    {
+        _config.StartMicOnLaunch = startMicOnLaunch;
+        AppConfigStore.Save(_config);
     }
 
     private void ThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -395,6 +439,8 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _config.StartMicOnLaunch = _audio.IsCapturing;
+        AppConfigStore.Save(_config);
         _audio.Dispose();
         base.OnClosed(e);
     }

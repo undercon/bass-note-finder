@@ -191,7 +191,7 @@ public partial class StudentModeView : UserControl, IGameMode
         if (!_currentNote.HasValue)
         {
             StatusText.Text = "Play the shown note.";
-            StatusText.FontSize = 13;
+            StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
             return;
@@ -200,14 +200,14 @@ public partial class StudentModeView : UserControl, IGameMode
         if (ShowNoteNamesCheckBox.IsChecked == true)
         {
             StatusText.Text = $"Play: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
-            StatusText.FontSize = 20;
+            StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.Foreground = Brushes.White;
         }
         else
         {
             StatusText.Text = "Play this note on your bass.";
-            StatusText.FontSize = 13;
+            StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
         }

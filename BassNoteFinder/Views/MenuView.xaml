@@ -2,20 +2,82 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="ModeActionButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-        <StackPanel>
+        <StackPanel Width="520">
             <TextBlock Text="Bass Note Finder" FontSize="32" FontWeight="Bold"
-                       HorizontalAlignment="Center" Margin="0,0,0,10"/>
-            <TextBlock Text="Select a mode" FontSize="14" Foreground="#AAA"
-                       HorizontalAlignment="Center" Margin="0,0,0,30"/>
-            <Button Content="Teacher Mode" Width="200" Height="40"
-                    Click="TeacherModeButton_Click"
-                    Background="#0E639C" Foreground="White" BorderThickness="0"
-                    FontSize="16" Cursor="Hand"/>
-            <Button Content="Student Mode" Width="200" Height="40"
-                    Click="StudentModeButton_Click"
-                    Background="#2D8C2D" Foreground="White" BorderThickness="0"
-                    FontSize="16" Cursor="Hand" Margin="0,10,0,0"/>
+                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBlock Text="Choose a practice mode" FontSize="14" Foreground="#AAA"
+                       HorizontalAlignment="Center" Margin="0,0,0,24"/>
+
+            <UniformGrid Columns="2" Rows="1">
+                <Border Background="#2A2A2A" BorderBrush="#333" BorderThickness="1" CornerRadius="10" Margin="6" Padding="16">
+                    <Grid Height="178">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Teacher Mode" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
+                        <TextBlock Grid.Row="1" Text="You pick the target note on staff, then play it on bass."
+                                   Margin="0,8,0,12" Foreground="#BBB" TextWrapping="Wrap"/>
+                        <Button Grid.Row="2" Content="Open Teacher"
+                                Click="TeacherModeButton_Click"
+                                Style="{StaticResource ModeActionButtonStyle}"
+                                Background="#0E639C"/>
+                    </Grid>
+                </Border>
+
+                <Border Background="#2A2A2A" BorderBrush="#333" BorderThickness="1" CornerRadius="10" Margin="6" Padding="16">
+                    <Grid Height="178">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Student Mode" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
+                        <TextBlock Grid.Row="1" Text="Random notes are assigned automatically; focus on fast accurate hits."
+                                   Margin="0,8,0,12" Foreground="#BBB" TextWrapping="Wrap"/>
+                        <Button Grid.Row="2" Content="Open Student"
+                                Click="StudentModeButton_Click"
+                                Style="{StaticResource ModeActionButtonStyle}"
+                                Background="#2D8C2D"/>
+                    </Grid>
+                </Border>
+            </UniformGrid>
         </StackPanel>
     </Grid>
 </UserControl>

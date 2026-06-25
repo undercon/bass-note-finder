@@ -12,6 +12,10 @@
                     Click="TeacherModeButton_Click"
                     Background="#0E639C" Foreground="White" BorderThickness="0"
                     FontSize="16" Cursor="Hand"/>
+            <Button Content="Student Mode" Width="200" Height="40"
+                    Click="StudentModeButton_Click"
+                    Background="#2D8C2D" Foreground="White" BorderThickness="0"
+                    FontSize="16" Cursor="Hand" Margin="0,10,0,0"/>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -65,12 +65,24 @@ public partial class MainWindow : Window
         ResetDetectionTracking();
         var menu = new MenuView();
         menu.TeacherModeSelected += ShowTeacherMode;
+        menu.StudentModeSelected += ShowStudentMode;
         MainContent.Content = menu;
     }
 
     private void ShowTeacherMode()
     {
         var view = new TeacherModeView();
+        view.BackToMenuRequested += ShowMenu;
+        view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
+        _audio.PreferHigherOctave = view.IncludeOctaves;
+        MainContent.Content = view;
+        _activeMode = view;
+        _activeMode.OnActivate();
+    }
+
+    private void ShowStudentMode()
+    {
+        var view = new StudentModeView();
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         _audio.PreferHigherOctave = view.IncludeOctaves;

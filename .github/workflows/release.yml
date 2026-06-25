@@ -55,10 +55,10 @@ jobs:
             -p:InformationalVersion=${{ env.APP_INFO_VERSION }} `
             --output $publishDir
 
-      - name: Include README in package
+      - name: Include end-user README in package
         shell: pwsh
         run: |
-          Copy-Item -LiteralPath "README.md" -Destination "artifacts/publish/win-x64/README.md" -Force
+          Copy-Item -LiteralPath "RELEASE_README.md" -Destination "artifacts/publish/win-x64/README.md" -Force
 
       - name: Package release artifact
         shell: pwsh

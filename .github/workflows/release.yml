@@ -24,7 +24,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore BassNoteFinder.Tests/BassNoteFinder.Tests.csproj
 
       - name: Compute release version
         shell: pwsh

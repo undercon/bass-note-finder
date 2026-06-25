@@ -49,9 +49,11 @@
                           Unchecked="HarmonicCorrectionCheckBox_Changed"/>
 
                 <Button Grid.Column="4" x:Name="ToggleMicBtn" Content="Start Mic"
-                        Width="100" Click="ToggleMic_Click" Margin="10,0"
+                        Width="110" Click="ToggleMic_Click" Margin="10,0"
                         Padding="10,6" Background="#0E639C" Foreground="White"
-                        BorderThickness="0" Cursor="Hand"/>
+                        BorderThickness="0" Cursor="Hand"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"/>
 
                 <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
                         CornerRadius="4" Padding="10,4" Margin="10,0">

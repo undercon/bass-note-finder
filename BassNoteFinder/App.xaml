@@ -75,6 +75,7 @@
                                                           Margin="10,0,6,0"
                                                           VerticalAlignment="Center"
                                                           HorizontalAlignment="Left"
+                                                          TextElement.Foreground="{TemplateBinding Foreground}"
                                                           Content="{TemplateBinding SelectionBoxItem}"
                                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                           ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"

@@ -65,7 +65,7 @@ public partial class StudentModeView : UserControl, IGameMode
                 _nextNoteTimer.Stop();
             }
             StatusText.FontSize = 18;
-            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.LimeGreen;
         }
         else
@@ -73,7 +73,7 @@ public partial class StudentModeView : UserControl, IGameMode
             SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {playedDisplay}.";
             StatusText.FontSize = 16;
-            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.OrangeRed;
         }
     }
@@ -218,8 +218,9 @@ public partial class StudentModeView : UserControl, IGameMode
         switch (state)
         {
             case FretboardState.Hidden:
-                FretboardPanel.Visibility = Visibility.Hidden;
+                FretboardPanel.Visibility = Visibility.Visible;
                 OverlayPanel.Visibility = Visibility.Visible;
+                _fretboardRenderer.Render(FretboardCanvas);
                 OverlayIcon.Text = "?";
                 OverlayIcon.FontSize = 48;
                 OverlayIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));

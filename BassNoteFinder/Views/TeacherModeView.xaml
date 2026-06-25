@@ -32,24 +32,32 @@
             </Border>
             <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
                 <Grid>
-                    <DockPanel x:Name="FretboardPanel" Visibility="Hidden">
-                        <TextBlock DockPanel.Dock="Top" Text="Fretboard" FontWeight="SemiBold"
-                                   HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                            <Canvas x:Name="FretboardCanvas" Width="720" Height="200" Margin="10" Background="#1E1E1E"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                    <StackPanel x:Name="OverlayPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Fretboard" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,8,0,2" Foreground="#CCC"/>
+
+                    <StackPanel x:Name="OverlayPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,4,0,2">
                         <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="#555"
                                    HorizontalAlignment="Center"/>
                         <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="#777"
                                    HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>
+
+                    <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Margin="10" Background="#1E1E1E"/>
+                        </ScrollViewer>
+                    </Grid>
                 </Grid>
             </Border>
         </UniformGrid>
 
-        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,10">
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,4">
             <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show Note Names"
                       VerticalAlignment="Center" Margin="5,4" Foreground="#CCC"
                       IsChecked="False"
@@ -63,12 +71,12 @@
                       VerticalAlignment="Center" Margin="5,4" Foreground="#CCC" IsChecked="False"
                       Checked="IncludeOctavesCheckBox_Changed"
                       Unchecked="IncludeOctavesCheckBox_Changed"/>
-            <Button x:Name="RandomBtn" Content="Random" Width="100" Click="RandomBtn_Click"
+            <Button x:Name="RandomBtn" Content="Random" Width="110" Click="RandomBtn_Click"
                     Margin="15,4,5,4" Padding="10,6" Background="#2D8C2D" Foreground="White"
-                    BorderThickness="0" Cursor="Hand"/>
-            <Button x:Name="BackToModeSelectionBtn" Content="Mode Selection" Width="110" Click="BackToModeSelectionBtn_Click"
+                    BorderThickness="0" Cursor="Hand" HorizontalContentAlignment="Center"/>
+            <Button x:Name="BackToModeSelectionBtn" Content="Mode Selection" Width="140" Click="BackToModeSelectionBtn_Click"
                     Margin="5,4" Padding="10,6" Background="#555" Foreground="White"
-                    BorderThickness="0" Cursor="Hand"/>
+                    BorderThickness="0" Cursor="Hand" HorizontalContentAlignment="Center"/>
         </WrapPanel>
     </Grid>
 </UserControl>

@@ -58,7 +58,7 @@ public partial class TeacherModeView : UserControl, IGameMode
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
             StatusText.FontSize = 16;
-            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.LimeGreen;
         }
         else
@@ -66,7 +66,7 @@ public partial class TeacherModeView : UserControl, IGameMode
             SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
             StatusText.FontSize = 16;
-            StatusText.FontWeight = FontWeights.Bold;
+            StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.OrangeRed;
         }
     }
@@ -253,8 +253,9 @@ public partial class TeacherModeView : UserControl, IGameMode
         switch (state)
         {
             case FretboardState.Hidden:
-                FretboardPanel.Visibility = Visibility.Hidden;
+                FretboardPanel.Visibility = Visibility.Visible;
                 OverlayPanel.Visibility = Visibility.Visible;
+                _fretboardRenderer.Render(FretboardCanvas);
                 OverlayIcon.Text = "?";
                 OverlayIcon.FontSize = 48;
                 OverlayIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));

@@ -132,6 +132,10 @@ public class FretboardRenderer
             {
                 double sx = nutEnd + (fret + 0.5) * FretSpacing;
                 double sy = y0 + str * StringSpacing;
+                if (fret == 0)
+                {
+                    sx = nutEnd + 0.18 * FretSpacing;
+                }
 
                 var color = highlightColor ?? Color.FromRgb(0, 180, 255);
                 canvas.Children.Add(new Ellipse
@@ -163,7 +167,7 @@ public class FretboardRenderer
                         FontSize = 9,
                         Foreground = Brushes.LightGray
                     };
-                    Canvas.SetLeft(ftb, sx - 10);
+                    Canvas.SetLeft(ftb, sx - 13);
                     Canvas.SetTop(ftb, sy + 12);
                     canvas.Children.Add(ftb);
                 }

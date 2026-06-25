@@ -24,7 +24,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore BassNoteFinder.Tests/BassNoteFinder.Tests.csproj
+        run: dotnet restore BassNoteFinder/BassNoteFinder.csproj
 
       - name: Compute release version
         shell: pwsh
@@ -35,11 +35,8 @@ jobs:
           "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
           "APP_INFO_VERSION=$infoVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Build app and tests
-        run: dotnet build BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-restore -p:Version=${{ env.APP_VERSION }} -p:InformationalVersion=${{ env.APP_INFO_VERSION }} -p:ContinuousIntegrationBuild=true
-
-      - name: Run tests
-        run: dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-build --logger "console;verbosity=minimal"
+      - name: Build app
+        run: dotnet build BassNoteFinder/BassNoteFinder.csproj --configuration Release --no-restore -p:Version=${{ env.APP_VERSION }} -p:InformationalVersion=${{ env.APP_INFO_VERSION }} -p:ContinuousIntegrationBuild=true
 
       - name: Publish self-contained Windows build
         shell: pwsh
@@ -52,9 +49,16 @@ jobs:
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
             -p:Version=${{ env.APP_VERSION }} `
             -p:InformationalVersion=${{ env.APP_INFO_VERSION }} `
             --output $publishDir
+
+      - name: Include README in package
+        shell: pwsh
+        run: |
+          Copy-Item -LiteralPath "README.md" -Destination "artifacts/publish/win-x64/README.md" -Force
 
       - name: Package release artifact
         shell: pwsh

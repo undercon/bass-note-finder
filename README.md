@@ -16,6 +16,18 @@ Current app modes:
 - Windows 10/11 x64
 - No .NET runtime install required (self-contained release).
 
+## Using the Release Package
+
+1. Download `BassNoteFinder-<tag>-win-x64.zip` from GitHub Releases.
+2. Extract the zip to a folder you can write to (for app settings persistence).
+3. Run `BassNoteFinder.exe`.
+4. Choose your input device, then click `Start Mic`.
+
+First-run defaults:
+- Mic starts off.
+- Harmonic correction starts on.
+- Input threshold defaults to `0.010`.
+
 ## Local Development
 
 From repo root:
@@ -47,7 +59,11 @@ Two workflows are included:
 
 - `.github/workflows/release.yml`
   - Runs on tag push.
-  - Restores, builds, runs tests, publishes self-contained `win-x64` app, zips output, and creates/updates a GitHub Release.
+  - Restores and builds **app project only** in `Release` configuration.
+  - Publishes self-contained `win-x64` app, zips output, and creates/updates a GitHub Release.
+  - Excludes test project packaging and test execution (tests are CI-only).
+  - Excludes PDB symbols from release output.
+  - Includes this `README.md` in the release zip.
   - Applies automated build-number versioning using GitHub Actions run number.
 
 ## Versioning
@@ -61,8 +77,8 @@ Two workflows are included:
 ### Trigger a release
 
 ```powershell
-git tag 0.1_alpha
-git push origin 0.1_alpha
+git tag 0.2
+git push origin 0.2
 ```
 
 The workflow will attach an artifact named like:
@@ -73,6 +89,12 @@ The workflow will attach an artifact named like:
 
 - Only the app project is published (`BassNoteFinder/BassNoteFinder.csproj`), so test binaries are not included in release artifacts.
 - Release publish settings use standard `dotnet publish` options and generate a self-contained single-file executable for Windows x64.
+- `README.md` is copied into the packaged artifact from repo root as the single source of truth.
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied.
+Use it at your own risk. Audio input behavior, pitch detection accuracy, and device compatibility can vary by system and hardware.
 
 ## Cross-Platform Roadmap Note
 

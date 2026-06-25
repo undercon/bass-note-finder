@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    env:
+      VERSION_PREFIX: 0.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Compute build version
+        shell: pwsh
+        run: |
+          $appVersion = "$env:VERSION_PREFIX.$env:GITHUB_RUN_NUMBER"
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $infoVersion = "$appVersion+sha.$shortSha"
+          "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "APP_INFO_VERSION=$infoVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build app and tests
+        run: dotnet build BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-restore -p:Version=${{ env.APP_VERSION }} -p:InformationalVersion=${{ env.APP_INFO_VERSION }} -p:ContinuousIntegrationBuild=true
+
+      - name: Run tests
+        run: dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-build --logger "console;verbosity=minimal"

@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-and-release:
+    runs-on: windows-latest
+    env:
+      VERSION_PREFIX: 0.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Compute release version
+        shell: pwsh
+        run: |
+          $appVersion = "$env:VERSION_PREFIX.$env:GITHUB_RUN_NUMBER"
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $infoVersion = "$appVersion+sha.$shortSha"
+          "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "APP_INFO_VERSION=$infoVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build app and tests
+        run: dotnet build BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-restore -p:Version=${{ env.APP_VERSION }} -p:InformationalVersion=${{ env.APP_INFO_VERSION }} -p:ContinuousIntegrationBuild=true
+
+      - name: Run tests
+        run: dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --configuration Release --no-build --logger "console;verbosity=minimal"
+
+      - name: Publish self-contained Windows build
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/win-x64"
+          dotnet publish BassNoteFinder/BassNoteFinder.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:Version=${{ env.APP_VERSION }} `
+            -p:InformationalVersion=${{ env.APP_INFO_VERSION }} `
+            --output $publishDir
+
+      - name: Package release artifact
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $zipName = "BassNoteFinder-$tag-win-x64.zip"
+          $zipPath = "artifacts/$zipName"
+
+          if (Test-Path -LiteralPath $zipPath) {
+            Remove-Item -LiteralPath $zipPath -Force
+          }
+
+          Compress-Archive -Path "artifacts/publish/win-x64/*" -DestinationPath $zipPath
+
+      - name: Create or update GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $zipPath = "artifacts/BassNoteFinder-$tag-win-x64.zip"
+          $title = "Bass Note Finder $tag"
+          $notes = @"
+          Automated release for tag $tag.
+          Build version: ${{ env.APP_VERSION }}
+
+          This package is self-contained for Windows x64 and does not require .NET to be installed.
+          "@
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $zipPath --clobber
+          }
+          else {
+            gh release create $tag $zipPath --title $title --notes $notes
+          }

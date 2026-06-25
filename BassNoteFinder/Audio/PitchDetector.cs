@@ -5,6 +5,10 @@ public class PitchDetector
     private const double MinClarity = 0.78;
     private const double PeakCutoffRatio = 0.90;
     private const double HarmonicFreqThreshold = 150.0;
+    private const double BassFundamentalCeiling = 115.0;
+    private const double BassFundamentalFloor = 35.0;
+    private const double OctaveRatioTolerance = 0.15;
+    private const double LowBassStrengthRatio = 0.84;
     private readonly int _sampleRate;
     private readonly int _minLag;
     private readonly int _maxLag;
@@ -109,12 +113,28 @@ public class PitchDetector
         int selectedTau = strongest.tau;
         double selectedFreq = (double)_sampleRate / selectedTau;
 
+        var lowerOctavePeak = FindOctavePeak(peaks, selectedTau, octaveRatio: 2.0);
+        if (lowerOctavePeak is { } lowerCandidate)
+        {
+            double lowerFreq = (double)_sampleRate / lowerCandidate.tau;
+            bool likelyBassHarmonic =
+                selectedFreq >= BassFundamentalFloor * 2.0 &&
+                selectedFreq <= BassFundamentalCeiling &&
+                lowerFreq >= BassFundamentalFloor;
+
+            if (likelyBassHarmonic && lowerCandidate.value >= strongest.value * LowBassStrengthRatio)
+            {
+                selectedTau = lowerCandidate.tau;
+                selectedFreq = lowerFreq;
+            }
+        }
+
         if (PreferHigherOctave && selectedFreq < HarmonicFreqThreshold)
         {
             foreach (var (tau, value) in peaks)
             {
                 double ratio = (double)selectedTau / tau;
-                if (Math.Abs(ratio - 2.0) < 0.15 && tau < selectedTau)
+                if (Math.Abs(ratio - 2.0) < OctaveRatioTolerance && tau < selectedTau)
                 {
                     double candidateFreq = (double)_sampleRate / tau;
                     if (candidateFreq > HarmonicFreqThreshold)
@@ -131,7 +151,7 @@ public class PitchDetector
             foreach (var (tau, value) in peaks)
             {
                 double ratio = (double)tau / selectedTau;
-                if (Math.Abs(ratio - 2.0) < 0.15)
+                if (Math.Abs(ratio - 2.0) < OctaveRatioTolerance)
                 {
                     selectedTau = tau;
                     break;
@@ -182,5 +202,29 @@ public class PitchDetector
 
         double offset = 0.5 * (left - right) / denominator;
         return tauIndex + Math.Clamp(offset, -0.5, 0.5);
+    }
+
+    private static (int tau, double value)? FindOctavePeak(List<(int tau, double value)> peaks, int referenceTau, double octaveRatio)
+    {
+        (int tau, double value)? best = null;
+        double smallestError = double.MaxValue;
+
+        foreach (var peak in peaks)
+        {
+            double ratio = (double)peak.tau / referenceTau;
+            double error = Math.Abs(ratio - octaveRatio);
+            if (error > OctaveRatioTolerance)
+            {
+                continue;
+            }
+
+            if (error < smallestError)
+            {
+                smallestError = error;
+                best = peak;
+            }
+        }
+
+        return best;
     }
 }

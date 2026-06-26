@@ -60,11 +60,12 @@ Two workflows are included:
 - `.github/workflows/release.yml`
   - Runs on tag push.
   - Restores and builds **app project only** in `Release` configuration.
-  - Publishes self-contained `win-x64` app, zips output, and creates/updates a GitHub Release.
+  - Publishes both a self-contained `win-x64` app and a smaller framework-dependent `win-x64-framework-dependent` app.
+  - Zips outputs and creates/updates a GitHub Release.
   - Excludes test project packaging and test execution (tests are CI-only).
   - Excludes PDB symbols from release output.
   - Includes this `README.md` in the release zip.
-  - Applies automated build-number versioning using GitHub Actions run number.
+  - Stamps release builds from the pushed tag value (supports `v` prefix).
 
 ## Versioning
 
@@ -82,14 +83,18 @@ git tag 0.2
 git push origin 0.2
 ```
 
-The workflow will attach an artifact named like:
+The workflow will attach artifacts named like:
 
 `BassNoteFinder-<tag>-win-x64.zip`
+
+`BassNoteFinder-<tag>-win-x64-framework-dependent.zip`
 
 ## Packaging Notes
 
 - Only the app project is published (`BassNoteFinder/BassNoteFinder.csproj`), so test binaries are not included in release artifacts.
-- Release publish settings use standard `dotnet publish` options and generate a self-contained single-file executable for Windows x64.
+- Release publish settings use standard `dotnet publish` options and generate:
+  - a self-contained single-file executable for Windows x64 (no runtime prerequisite)
+  - a framework-dependent single-file executable for Windows x64 (requires .NET Desktop Runtime 10.x x64)
 - `README.md` is copied into the packaged artifact from repo root as the single source of truth.
 
 ## Disclaimer

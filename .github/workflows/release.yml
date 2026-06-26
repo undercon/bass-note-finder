@@ -54,23 +54,52 @@ jobs:
             -p:InformationalVersion=${{ env.APP_INFO_VERSION }} `
             --output $publishDir
 
-      - name: Include end-user README in package
+      - name: Publish framework-dependent Windows build
+        shell: pwsh
+        run: |
+          $publishDir = "artifacts/publish/win-x64-framework-dependent"
+          dotnet publish BassNoteFinder/BassNoteFinder.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained false `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
+            -p:Version=${{ env.APP_VERSION }} `
+            -p:InformationalVersion=${{ env.APP_INFO_VERSION }} `
+            --output $publishDir
+
+      - name: Include end-user README in packages
         shell: pwsh
         run: |
           Copy-Item -LiteralPath "RELEASE_README.md" -Destination "artifacts/publish/win-x64/README.md" -Force
+          Copy-Item -LiteralPath "RELEASE_README.md" -Destination "artifacts/publish/win-x64-framework-dependent/README.md" -Force
+          @"
+          This build is framework-dependent.
+          Requires Microsoft .NET Desktop Runtime 10.x (x64) on Windows 10/11.
+          "@ | Set-Content -LiteralPath "artifacts/publish/win-x64-framework-dependent/RUNTIME_REQUIRED.txt"
 
       - name: Package release artifact
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $zipName = "BassNoteFinder-$tag-win-x64.zip"
-          $zipPath = "artifacts/$zipName"
+          $selfContainedZipName = "BassNoteFinder-$tag-win-x64.zip"
+          $frameworkDependentZipName = "BassNoteFinder-$tag-win-x64-framework-dependent.zip"
+          $selfContainedZipPath = "artifacts/$selfContainedZipName"
+          $frameworkDependentZipPath = "artifacts/$frameworkDependentZipName"
 
-          if (Test-Path -LiteralPath $zipPath) {
-            Remove-Item -LiteralPath $zipPath -Force
+          if (Test-Path -LiteralPath $selfContainedZipPath) {
+            Remove-Item -LiteralPath $selfContainedZipPath -Force
           }
 
-          Compress-Archive -Path "artifacts/publish/win-x64/*" -DestinationPath $zipPath
+          if (Test-Path -LiteralPath $frameworkDependentZipPath) {
+            Remove-Item -LiteralPath $frameworkDependentZipPath -Force
+          }
+
+          Compress-Archive -Path "artifacts/publish/win-x64/*" -DestinationPath $selfContainedZipPath
+          Compress-Archive -Path "artifacts/publish/win-x64-framework-dependent/*" -DestinationPath $frameworkDependentZipPath
 
       - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
@@ -81,5 +110,9 @@ jobs:
             Automated release for tag ${{ github.ref_name }}.
             Build version: ${{ env.APP_VERSION }}
 
-            This package is self-contained for Windows x64 and does not require .NET to be installed.
-          files: artifacts/BassNoteFinder-${{ github.ref_name }}-win-x64.zip
+            Included artifacts:
+            - self-contained `win-x64` package (no .NET install required)
+            - framework-dependent `win-x64-framework-dependent` package (requires .NET Desktop Runtime 10.x x64)
+          files: |
+            artifacts/BassNoteFinder-${{ github.ref_name }}-win-x64.zip
+            artifacts/BassNoteFinder-${{ github.ref_name }}-win-x64-framework-dependent.zip

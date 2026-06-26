@@ -7,7 +7,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Version>0.1.0-local</Version>
   </PropertyGroup>
 
@@ -19,6 +18,10 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\AppIcon.png" />
   </ItemGroup>
 
 </Project>

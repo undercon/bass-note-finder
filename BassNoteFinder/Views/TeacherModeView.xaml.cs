@@ -64,8 +64,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         }
         else
         {
-            SetFretboardState(FretboardState.FlashingWrong, evaluatedNote);
-            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(evaluatedNote, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
+            SetFretboardState(FretboardState.FlashingWrong, note);
+            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.Foreground = Brushes.OrangeRed;
@@ -270,7 +270,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 if (studentNote.HasValue)
                 {
                     _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
-                        Color.FromRgb(0xFF, 0x32, 0x32), _currentNote);
+                        Color.FromRgb(0xFF, 0x32, 0x32));
                 }
                 break;
 

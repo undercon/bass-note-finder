@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private const int RequiredLostDetections = 3;
     private const double StableCentsDriftTolerance = 35.0;
     private const double HarmonicJumpThreshold = 1.35;
+    private const double SignalIndicatorCeiling = 0.06;
 
     private readonly AudioCaptureService _audio;
     private readonly AppConfig _config;
@@ -41,6 +42,7 @@ public partial class MainWindow : Window
         _audio = new AudioCaptureService();
         _audio.PitchDetected += OnPitchDetected;
         _audio.PitchLost += OnPitchLost;
+        _audio.SignalLevelMeasured += OnSignalLevelMeasured;
         _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => DetectedNoteText.Text = msg);
         ApplyConfig();
         PopulateInputDevices();
@@ -189,6 +191,7 @@ public partial class MainWindow : Window
         if (!isCapturing)
         {
             DetectedNoteText.Text = "--";
+            UpdateSignalIndicator(0);
         }
         else if (DetectedNoteText.Text == "--")
         {
@@ -311,6 +314,11 @@ public partial class MainWindow : Window
         });
     }
 
+    private void OnSignalLevelMeasured(float rms)
+    {
+        Dispatcher.Invoke(() => UpdateSignalIndicator(rms));
+    }
+
     private void UpdateThresholdDisplay(double value)
     {
         ThresholdValueText.Text = value.ToString("0.000");
@@ -421,6 +429,31 @@ public partial class MainWindow : Window
     private void ClearRecentFrequencies()
     {
         _recentFrequencies.Clear();
+    }
+
+    private void UpdateSignalIndicator(double rms)
+    {
+        if (SignalDot == null)
+        {
+            return;
+        }
+
+        if (!_audio.IsCapturing || rms <= 0.0005)
+        {
+            SignalDot.Fill = new SolidColorBrush(Color.FromRgb(0x66, 0x66, 0x66));
+            SignalDot.Stroke = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+            SignalDot.Opacity = 0.55;
+            return;
+        }
+
+        double level = Math.Clamp(rms / SignalIndicatorCeiling, 0.0, 1.0);
+        byte red = (byte)(0x66 + level * (0x4F));
+        byte green = (byte)(0x66 + level * (0x99));
+        byte blue = (byte)(0x66 + level * (0x2B));
+
+        SignalDot.Fill = new SolidColorBrush(Color.FromRgb(red, green, blue));
+        SignalDot.Stroke = new SolidColorBrush(Color.FromRgb(0xC8, 0xD4, 0xCC));
+        SignalDot.Opacity = 0.55 + 0.45 * level;
     }
 
     private void WindowBoundsChanged(object? sender, EventArgs e)

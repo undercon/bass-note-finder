@@ -59,6 +59,8 @@
                 <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
                         CornerRadius="4" Padding="10,4" Margin="10,0">
                     <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="SignalDot" Width="12" Height="12" Margin="0,0,8,0"
+                                 VerticalAlignment="Center" Fill="#666" Stroke="#888" StrokeThickness="1"/>
                         <TextBlock Text="Detected: " VerticalAlignment="Center" Foreground="#AAA"/>
                         <TextBlock x:Name="DetectedNoteText" Text="--" 
                                    Width="130" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>

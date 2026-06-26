@@ -47,7 +47,7 @@ public partial class StudentModeView : UserControl, IGameMode
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
         Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target);
-        string playedDisplay = NoteDisplay.Format(evaluatedNote, ToDisplayAccidental(_currentMode), includeOctave: true);
+        string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave: true);
 
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
@@ -71,7 +71,7 @@ public partial class StudentModeView : UserControl, IGameMode
         }
         else
         {
-            SetFretboardState(FretboardState.FlashingWrong, evaluatedNote);
+            SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {playedDisplay}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
@@ -234,7 +234,7 @@ public partial class StudentModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    _fretboardRenderer.Render(FretboardCanvas, studentNote.Value, Color.FromRgb(0xFF, 0x32, 0x32), _currentNote);
+                    _fretboardRenderer.Render(FretboardCanvas, studentNote.Value, Color.FromRgb(0xFF, 0x32, 0x32));
                 }
                 break;
 

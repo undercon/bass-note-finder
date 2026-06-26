@@ -23,6 +23,7 @@ public class AudioCaptureService : IDisposable
 
     public event Action<double>? PitchDetected;
     public event Action? PitchLost;
+    public event Action<float>? SignalLevelMeasured;
     public event Action<string>? ErrorOccurred;
 
     public bool PreferHigherOctave
@@ -97,6 +98,7 @@ public class AudioCaptureService : IDisposable
     public void StopCapture()
     {
         _isCapturing = false;
+        SignalLevelMeasured?.Invoke(0);
         if (_waveIn != null)
         {
             try { _waveIn.StopRecording(); } catch { }
@@ -133,7 +135,10 @@ public class AudioCaptureService : IDisposable
             float[] copy = new float[_buffer.Length];
             Buffer.BlockCopy(_buffer, 0, copy, 0, _buffer.Length * 4);
 
-            if (GetRootMeanSquare(copy) < MinSignalLevel)
+            float rms = GetRootMeanSquare(copy);
+            SignalLevelMeasured?.Invoke(rms);
+
+            if (rms < MinSignalLevel)
             {
                 PitchLost?.Invoke();
                 return;

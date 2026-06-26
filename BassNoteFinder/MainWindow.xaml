@@ -7,6 +7,13 @@
         Background="#1E1E1E" Foreground="White"
         FontFamily="Segoe UI" FontSize="14"
         KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/DarkComboBoxResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

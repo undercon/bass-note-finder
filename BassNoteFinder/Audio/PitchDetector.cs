@@ -4,11 +4,14 @@ public class PitchDetector
 {
     private const double MinClarity = 0.78;
     private const double PeakCutoffRatio = 0.90;
-    private const double HarmonicFreqThreshold = 150.0;
+    private const double HarmonicFreqThreshold = 220.0;
     private const double BassFundamentalCeiling = 115.0;
     private const double BassFundamentalFloor = 35.0;
     private const double OctaveRatioTolerance = 0.15;
-    private const double LowBassStrengthRatio = 0.84;
+    private const double LowBassStrengthRatio = 0.96;
+    private const double InputEqCrossover = 105.0;
+    private const double InputEqLowGain = 0.75;
+    private const double InputEqHighGain = 2.35;
     private readonly int _sampleRate;
     private readonly int _minLag;
     private readonly int _maxLag;
@@ -137,7 +140,7 @@ public class PitchDetector
                 if (Math.Abs(ratio - 2.0) < OctaveRatioTolerance && tau < selectedTau)
                 {
                     double candidateFreq = (double)_sampleRate / tau;
-                    if (candidateFreq > HarmonicFreqThreshold)
+                    if (candidateFreq > HarmonicFreqThreshold && value >= strongest.value * 0.98)
                     {
                         selectedTau = tau;
                         selectedFreq = candidateFreq;
@@ -146,41 +149,49 @@ public class PitchDetector
                 }
             }
         }
-        else if (selectedFreq > HarmonicFreqThreshold)
-        {
-            foreach (var (tau, value) in peaks)
-            {
-                double ratio = (double)tau / selectedTau;
-                if (Math.Abs(ratio - 2.0) < OctaveRatioTolerance)
-                {
-                    selectedTau = tau;
-                    break;
-                }
-            }
-        }
 
         return RefineTau(nsdf, selectedTau);
     }
 
-    private static float[] PrepareSamples(float[] samples)
+    private float[] PrepareSamples(float[] samples)
     {
+        float[] equalized = ApplyInputEq(samples);
         float[] prepared = new float[samples.Length];
         double mean = 0;
 
-        for (int i = 0; i < samples.Length; i++)
+        for (int i = 0; i < equalized.Length; i++)
         {
-            mean += samples[i];
+            mean += equalized[i];
         }
 
-        mean /= samples.Length;
+        mean /= equalized.Length;
 
-        for (int i = 0; i < samples.Length; i++)
+        for (int i = 0; i < equalized.Length; i++)
         {
-            double window = 0.5 - 0.5 * Math.Cos(2.0 * Math.PI * i / (samples.Length - 1));
-            prepared[i] = (float)((samples[i] - mean) * window);
+            double window = 0.5 - 0.5 * Math.Cos(2.0 * Math.PI * i / (equalized.Length - 1));
+            prepared[i] = (float)((equalized[i] - mean) * window);
         }
 
         return prepared;
+    }
+
+    private float[] ApplyInputEq(float[] samples)
+    {
+        float[] equalized = new float[samples.Length];
+        double rc = 1.0 / (2.0 * Math.PI * InputEqCrossover);
+        double dt = 1.0 / _sampleRate;
+        double alpha = dt / (rc + dt);
+        double low = samples[0];
+
+        for (int i = 0; i < samples.Length; i++)
+        {
+            double sample = samples[i];
+            low += alpha * (sample - low);
+            double high = sample - low;
+            equalized[i] = (float)(low * InputEqLowGain + high * InputEqHighGain);
+        }
+
+        return equalized;
     }
 
     private static double RefineTau(double[] curve, int tauIndex)

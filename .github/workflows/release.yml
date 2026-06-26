@@ -11,8 +11,6 @@ permissions:
 jobs:
   build-test-and-release:
     runs-on: windows-latest
-    env:
-      VERSION_PREFIX: 0.1
 
     steps:
       - name: Checkout
@@ -29,7 +27,8 @@ jobs:
       - name: Compute release version
         shell: pwsh
         run: |
-          $appVersion = "$env:VERSION_PREFIX.$env:GITHUB_RUN_NUMBER"
+          $tag = "${{ github.ref_name }}"
+          $appVersion = if ($tag.StartsWith("v")) { $tag.Substring(1) } else { $tag }
           $shortSha = "${{ github.sha }}".Substring(0, 7)
           $infoVersion = "$appVersion+sha.$shortSha"
           "APP_VERSION=$appVersion" | Out-File -FilePath $env:GITHUB_ENV -Append

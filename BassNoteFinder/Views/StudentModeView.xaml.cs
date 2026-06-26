@@ -47,7 +47,8 @@ public partial class StudentModeView : UserControl, IGameMode
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
         Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target);
-        string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave: true);
+        bool includeOctave = IncludeOctavesCheckBox.IsChecked == true;
+        string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave);
 
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
@@ -243,7 +244,7 @@ public partial class StudentModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), includeOctave: true);
+                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
                     OverlayIcon.FontSize = 36;
                     OverlayIcon.Foreground = Brushes.LimeGreen;
                     OverlayText.Text = "Correct!";

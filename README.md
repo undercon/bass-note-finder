@@ -69,9 +69,10 @@ Two workflows are included:
 ## Versioning
 
 - Local default app version is `0.1.0-local`.
-- CI/Release workflows compute:
+- CI workflow computes:
   - `APP_VERSION = 0.1.<run_number>`
   - `APP_INFO_VERSION = 0.1.<run_number>+sha.<short_sha>`
+- Release workflow uses the pushed tag as app version (for example, tag `0.3.3` -> app shows `v0.3.3`).
 - The app displays the current version on the mode selection screen (top-right badge).
 
 ### Trigger a release

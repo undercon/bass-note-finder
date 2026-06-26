@@ -46,8 +46,8 @@ public partial class StudentModeView : UserControl, IGameMode
     {
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
-        Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target);
         bool includeOctave = IncludeOctavesCheckBox.IsChecked == true;
+        Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target, includeOctave);
         string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave);
 
         if (evaluatedNote.MidiNote == target.MidiNote)
@@ -296,7 +296,7 @@ public partial class StudentModeView : UserControl, IGameMode
         };
     }
 
-    private static Note EvaluateDetectedNoteAgainstTarget(Note detected, Note target)
+    private static Note EvaluateDetectedNoteAgainstTarget(Note detected, Note target, bool includeOctaves)
     {
         // Wrong pitch class entirely — report as-is
         if (detected.PitchClass != target.PitchClass)
@@ -304,6 +304,10 @@ public partial class StudentModeView : UserControl, IGameMode
 
         // Exact match
         if (detected.MidiNote == target.MidiNote)
+            return detected;
+
+        // When octaves are displayed/enforced, treat octave mismatches as wrong answers.
+        if (includeOctaves)
             return detected;
 
         // Accept harmonic correction only for exactly one octave off (±12 semitones).

@@ -244,6 +244,44 @@ public class PitchDetectorOctaveTests
         Assert.Equal("A1", note.FullName);
     }
 
+    [Fact]
+    public void DetectPitch_GRegisterComparison_WithHigherOctavePreference_RemainsPitchClassConsistent()
+    {
+        const int sampleRate = 44100;
+        const int bufferSize = 8192;
+
+        var detector = new PitchDetector(sampleRate, bufferSize)
+        {
+            PreferHigherOctave = true
+        };
+
+        Note g1 = Detect(detector, sampleRate, bufferSize, 49.0);
+        Note g2 = Detect(detector, sampleRate, bufferSize, 98.0);
+        Note g3 = Detect(detector, sampleRate, bufferSize, 196.0);
+
+        Assert.Equal("G", g1.Name);
+        Assert.Equal("G", g2.Name);
+        Assert.Equal("G", g3.Name);
+        Assert.True(g1.MidiNote <= g2.MidiNote);
+        Assert.True(g2.MidiNote <= g3.MidiNote);
+    }
+
+    private static Note Detect(PitchDetector detector, int sampleRate, int bufferSize, double frequency)
+    {
+        float[] samples = GenerateSignal(
+            sampleRate,
+            bufferSize,
+            frequency,
+            (1.0, 1.00),
+            (2.0, 0.45),
+            (3.0, 0.25));
+
+        double pitch = detector.DetectPitch(samples);
+        Assert.True(pitch > 0);
+        Note.CentsOffFromFrequency(pitch, out var note);
+        return note;
+    }
+
     private static float[] GenerateSignal(int sampleRate, int sampleCount, double baseFrequency, params (double multiple, double amplitude)[] harmonics)
     {
         var samples = new float[sampleCount];

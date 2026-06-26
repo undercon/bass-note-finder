@@ -10,27 +10,13 @@ namespace BassNoteFinder;
 
 public partial class MainWindow : Window
 {
-    private const int AttackIgnoreFrames = 1;
-    private const int PitchMedianWindowSize = 3;
-    private const int RequiredStableDetections = 2;
-    private const int RequiredLostDetections = 3;
-    private const double StableCentsDriftTolerance = 35.0;
-    private const double HarmonicJumpThreshold = 1.35;
     private const double SignalIndicatorCeiling = 0.06;
 
     private readonly AudioCaptureService _audio;
+    private readonly StableNoteDetectionPipeline _detectionPipeline;
     private readonly AppConfig _config;
-    private readonly Queue<double> _recentFrequencies = new();
 
     private IGameMode? _activeMode;
-    private int _attackIgnoreFramesRemaining;
-    private int _candidateMidiNote = int.MinValue;
-    private double _candidateCentsOff;
-    private int _stableDetectionCount;
-    private int _lostDetectionCount;
-    private int? _lastResolvedMidiNote;
-    private double? _lastStableFrequency;
-    private bool _signalLost = true;
     private bool _loadingConfig;
 
     public bool ShowDeviation { get; set; }
@@ -40,10 +26,13 @@ public partial class MainWindow : Window
         InitializeComponent();
         _config = AppConfigStore.Load();
         _audio = new AudioCaptureService();
+        _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
         _audio.PitchLost += OnPitchLost;
         _audio.SignalLevelMeasured += OnSignalLevelMeasured;
         _audio.ErrorOccurred += msg => Dispatcher.Invoke(() => DetectedNoteText.Text = msg);
+        _detectionPipeline.StableNoteDetected += OnStableNoteDetected;
+        _detectionPipeline.StableNoteLost += OnStableNoteLost;
         ApplyConfig();
         PopulateInputDevices();
         Loaded += OnLoaded;
@@ -65,7 +54,7 @@ public partial class MainWindow : Window
             _activeMode = null;
         }
 
-        ResetDetectionTracking();
+        _detectionPipeline.Reset();
         var menu = new MenuView();
         menu.TeacherModeSelected += ShowTeacherMode;
         menu.StudentModeSelected += ShowStudentMode;
@@ -191,6 +180,7 @@ public partial class MainWindow : Window
         if (!isCapturing)
         {
             DetectedNoteText.Text = "--";
+            _detectionPipeline.Reset();
             UpdateSignalIndicator(0);
         }
         else if (DetectedNoteText.Text == "--")
@@ -226,6 +216,7 @@ public partial class MainWindow : Window
 
     private void HarmonicCorrectionCheckBox_Changed(object sender, RoutedEventArgs e)
     {
+        _detectionPipeline.UseHarmonicCorrection = HarmonicCorrectionCheckBox.IsChecked == true;
         if (_loadingConfig)
         {
             return;
@@ -251,67 +242,29 @@ public partial class MainWindow : Window
 
     private void OnPitchDetected(double frequency)
     {
-        Dispatcher.Invoke(() =>
-        {
-            if (_signalLost)
-            {
-                _signalLost = false;
-                _attackIgnoreFramesRemaining = AttackIgnoreFrames;
-                ClearRecentFrequencies();
-            }
-
-            _lostDetectionCount = 0;
-
-            if (_attackIgnoreFramesRemaining > 0)
-            {
-                _attackIgnoreFramesRemaining--;
-                return;
-            }
-
-            AddRecentFrequency(frequency);
-            double filteredFrequency = GetMedianFrequency();
-            filteredFrequency = ApplyHarmonicCorrection(filteredFrequency);
-
-            var centsOff = Note.CentsOffFromFrequency(filteredFrequency, out var detected);
-            TrackCandidateDetection(detected, centsOff);
-
-            bool isStable = _stableDetectionCount >= RequiredStableDetections;
-            if (!isStable)
-            {
-                return;
-            }
-
-            if (_lastResolvedMidiNote == detected.MidiNote)
-            {
-                return;
-            }
-
-            _lastResolvedMidiNote = detected.MidiNote;
-            _lastStableFrequency = filteredFrequency;
-
-            DetectedNoteText.Text = ShowDeviation
-                ? $"{detected.FullName} ({centsOff:F0}\u00A2)"
-                : detected.FullName;
-            DetectedNoteText.Foreground = Brushes.White;
-
-            _activeMode?.OnNoteDetected(detected, centsOff);
-        });
+        _detectionPipeline.ProcessFrequency(frequency);
     }
 
     private void OnPitchLost()
     {
+        _detectionPipeline.ProcessLost();
+    }
+
+    private void OnStableNoteDetected(Note detected, double centsOff)
+    {
         Dispatcher.Invoke(() =>
         {
-            _lostDetectionCount++;
-            if (_lostDetectionCount < RequiredLostDetections)
-            {
-                return;
-            }
-
-            ResetDetectionTracking();
-            _signalLost = true;
-            _activeMode?.OnNoteLost();
+            DetectedNoteText.Text = ShowDeviation
+                ? $"{detected.FullName} ({centsOff:F0}\u00A2)"
+                : detected.FullName;
+            DetectedNoteText.Foreground = Brushes.White;
+            _activeMode?.OnNoteDetected(detected, centsOff);
         });
+    }
+
+    private void OnStableNoteLost()
+    {
+        Dispatcher.Invoke(() => _activeMode?.OnNoteLost());
     }
 
     private void OnSignalLevelMeasured(float rms)
@@ -322,32 +275,6 @@ public partial class MainWindow : Window
     private void UpdateThresholdDisplay(double value)
     {
         ThresholdValueText.Text = value.ToString("0.000");
-    }
-
-    private void TrackCandidateDetection(Note detected, double centsOff)
-    {
-        if (detected.MidiNote == _candidateMidiNote && Math.Abs(centsOff - _candidateCentsOff) <= StableCentsDriftTolerance)
-        {
-            _stableDetectionCount++;
-        }
-        else
-        {
-            _candidateMidiNote = detected.MidiNote;
-            _candidateCentsOff = centsOff;
-            _stableDetectionCount = 1;
-        }
-    }
-
-    private void ResetDetectionTracking()
-    {
-        _attackIgnoreFramesRemaining = 0;
-        _candidateMidiNote = int.MinValue;
-        _candidateCentsOff = 0;
-        _stableDetectionCount = 0;
-        _lostDetectionCount = 0;
-        _lastResolvedMidiNote = null;
-        _lastStableFrequency = null;
-        ClearRecentFrequencies();
     }
 
     private void ApplyConfig()
@@ -365,6 +292,7 @@ public partial class MainWindow : Window
 
         ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
         HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
+        _detectionPipeline.UseHarmonicCorrection = _config.UseHarmonicCorrection;
         UpdateThresholdDisplay(ThresholdSlider.Value);
         _audio.MinSignalLevel = (float)ThresholdSlider.Value;
         _loadingConfig = false;
@@ -379,56 +307,6 @@ public partial class MainWindow : Window
 
         _config.SelectedInputDevice = InputCombo.SelectedItem as string ?? string.Empty;
         AppConfigStore.Save(_config);
-    }
-
-    private void AddRecentFrequency(double frequency)
-    {
-        _recentFrequencies.Enqueue(frequency);
-        while (_recentFrequencies.Count > PitchMedianWindowSize)
-        {
-            _recentFrequencies.Dequeue();
-        }
-    }
-
-    private double GetMedianFrequency()
-    {
-        if (_recentFrequencies.Count == 0)
-        {
-            return 0;
-        }
-
-        var ordered = _recentFrequencies.OrderBy(x => x).ToArray();
-        return ordered[ordered.Length / 2];
-    }
-
-    private double ApplyHarmonicCorrection(double frequency)
-    {
-        if (HarmonicCorrectionCheckBox.IsChecked != true || _lastStableFrequency is null)
-        {
-            return frequency;
-        }
-
-        double halfFrequency = frequency / 2.0;
-        if (halfFrequency < 30)
-        {
-            return frequency;
-        }
-
-        double upwardJumpRatio = frequency / _lastStableFrequency.Value;
-        double fullJumpDistance = Math.Abs(frequency - _lastStableFrequency.Value);
-        double halfJumpDistance = Math.Abs(halfFrequency - _lastStableFrequency.Value);
-
-        if (upwardJumpRatio >= HarmonicJumpThreshold && halfJumpDistance < fullJumpDistance)
-        {
-            return halfFrequency;
-        }
-
-        return frequency;
-    }
-
-    private void ClearRecentFrequencies()
-    {
-        _recentFrequencies.Clear();
     }
 
     private void UpdateSignalIndicator(double rms)

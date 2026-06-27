@@ -6,6 +6,47 @@ if (args.Length == 0)
 {
     Console.WriteLine("Usage: PitchAnalyzer <audio-file>");
     Console.WriteLine("       PitchAnalyzer --full-pass-metrics [FullPassNotes-directory]");
+    Console.WriteLine("       PitchAnalyzer --latency-metrics [FullPassNotes-directory]");
+    return;
+}
+
+if (args[0] == "--latency-metrics")
+{
+    string root = args.Length > 1 ? args[1] : Path.Combine("BassNoteFinder.Tests", "Resources", "FullPassNotes");
+    root = Path.GetFullPath(root);
+
+    if (!Directory.Exists(root))
+    {
+        Console.WriteLine($"Directory not found: {root}");
+        return;
+    }
+
+    int[] bufferSizes = [4096, 6144, 8192];
+    Console.WriteLine("pass,file,expected,buffer_size,hop_size,first_signal_ms,first_pitch_ms,first_correct_ms,stable_correct_ms,accuracy,primary");
+
+    foreach (int analysisBufferSize in bufferSizes)
+    {
+        foreach (string file in Directory.GetFiles(root, "*.wav", SearchOption.AllDirectories).OrderBy(Path.GetDirectoryName).ThenBy(Path.GetFileName))
+        {
+            string pass = Path.GetFileName(Path.GetDirectoryName(file)) ?? "unknown";
+            string expected = GetExpectedNote(file);
+            var result = AnalyzeLatency(file, expected, analysisBufferSize);
+
+            Console.WriteLine(string.Join(',',
+                pass,
+                Path.GetFileName(file),
+                expected,
+                analysisBufferSize,
+                analysisBufferSize / 4,
+                FormatMetric(result.FirstSignalMs),
+                FormatMetric(result.FirstPitchMs),
+                FormatMetric(result.FirstCorrectMs),
+                FormatMetric(result.StableCorrectMs),
+                result.Accuracy.ToString("F1"),
+                result.PrimaryNote));
+        }
+    }
+
     return;
 }
 
@@ -91,6 +132,77 @@ Console.WriteLine("\n=== Summary ===");
 foreach (var (name, count) in counts.OrderByDescending(x => x.Value))
 {
     Console.WriteLine($"  {name}: {count}");
+}
+
+static LatencyMetrics AnalyzeLatency(string path, string expectedNote, int bufferSize)
+{
+    var samples = LoadAudioMono(path, out int sampleRate);
+    var detector = new PitchDetector(sampleRate, bufferSize);
+    var pipeline = new StableNoteDetectionPipeline();
+    int hopSize = bufferSize / 4;
+    double? firstSignalMs = null;
+    double? firstPitchMs = null;
+    double? firstCorrectMs = null;
+    double? stableCorrectMs = null;
+    int pitchedFrames = 0;
+    int correctFrames = 0;
+    var counts = new Dictionary<string, int>();
+
+    pipeline.StableNoteDetected += (note, _) =>
+    {
+        if (note.FullName == expectedNote && stableCorrectMs is null)
+        {
+            stableCorrectMs = firstCorrectMs;
+        }
+    };
+
+    for (int offset = 0; offset + bufferSize <= samples.Length; offset += hopSize)
+    {
+        float[] buffer = new float[bufferSize];
+        Array.Copy(samples, offset, buffer, 0, bufferSize);
+
+        double rms = Math.Sqrt(buffer.Average(x => x * x));
+        if (rms < 0.005f)
+        {
+            pipeline.ProcessLost();
+            continue;
+        }
+
+        double frameEndMs = (offset + bufferSize) / (double)sampleRate * 1000.0;
+        firstSignalMs ??= frameEndMs;
+
+        double pitch = detector.DetectPitch(buffer);
+        if (pitch <= 0)
+        {
+            pipeline.ProcessLost();
+            continue;
+        }
+
+        firstPitchMs ??= frameEndMs;
+        pitchedFrames++;
+        Note.CentsOffFromFrequency(pitch, out var note);
+        string name = note.FullName;
+
+        counts.TryGetValue(name, out int count);
+        counts[name] = count + 1;
+        pipeline.ProcessFrequency(pitch);
+
+        if (name == expectedNote)
+        {
+            correctFrames++;
+            firstCorrectMs ??= frameEndMs;
+        }
+    }
+
+    var primary = counts.Count == 0 ? ("", 0) : counts.OrderByDescending(x => x.Value).Select(x => (x.Key, x.Value)).First();
+    double accuracy = pitchedFrames == 0 ? 0 : correctFrames / (double)pitchedFrames * 100.0;
+
+    return new LatencyMetrics(firstSignalMs, firstPitchMs, firstCorrectMs, stableCorrectMs, accuracy, primary.Item1);
+}
+
+static string FormatMetric(double? value)
+{
+    return value is null ? "" : value.Value.ToString("F1");
 }
 
 static DetectionMetrics AnalyzeFile(string path, string expectedNote)
@@ -191,3 +303,11 @@ internal readonly record struct DetectionMetrics(
     string PrimaryNote,
     int PrimaryFrames,
     double AverageCentsOff);
+
+internal readonly record struct LatencyMetrics(
+    double? FirstSignalMs,
+    double? FirstPitchMs,
+    double? FirstCorrectMs,
+    double? StableCorrectMs,
+    double Accuracy,
+    string PrimaryNote);

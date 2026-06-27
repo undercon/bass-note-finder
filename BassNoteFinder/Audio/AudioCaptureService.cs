@@ -4,7 +4,7 @@ namespace BassNoteFinder.Audio;
 
 public class AudioCaptureService : IDisposable
 {
-    private float _minSignalLevel = 0.02f;
+    private float _minSignalLevel = 0.005f;
     private WaveInEvent? _waveIn;
     private readonly PitchDetector _pitchDetector;
     private float[]? _buffer;
@@ -16,7 +16,7 @@ public class AudioCaptureService : IDisposable
     public float MinSignalLevel
     {
         get => _minSignalLevel;
-        set => _minSignalLevel = Math.Clamp(value, 0.01f, 0.02f);
+        set => _minSignalLevel = Math.Clamp(value, 0.005f, 0.02f);
     }
 
     private bool _isCapturing;

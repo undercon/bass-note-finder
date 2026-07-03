@@ -15,6 +15,7 @@ public class StaffRenderer
     private const double StaffTop = 60;
     private const double StaffLeft = 30;
     private const double ColumnOffset = 60;
+    private const double BassClefYOffset = 6 - Ls;
 
     private static readonly Brush StaffLineBrush = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
     private static readonly Brush ClefBrush = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
@@ -262,7 +263,7 @@ public class StaffRenderer
                 Stroke = StaffLineBrush, StrokeThickness = 1
             });
 
-        DrawBassClef(canvas, 32, top + 2 * Ls + 6);
+        DrawBassClef(canvas, 32, top + 2 * Ls + BassClefYOffset);
     }
 
     private static void DrawBassClef(Canvas canvas, double x, double y)

@@ -19,16 +19,23 @@ public partial class StudentModeView : UserControl, IGameMode
 
     private Note? _currentNote;
     private StaffRenderer.AccidentalMode _currentMode = StaffRenderer.AccidentalMode.Natural;
+    private bool _loadingSettings;
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
+    public event Action<StudentModeSettings>? SettingsChanged;
     public bool IncludeOctaves => IncludeOctavesCheckBox.IsChecked == true;
 
-    public StudentModeView()
+    public StudentModeView() : this(new StudentModeSettings())
+    {
+    }
+
+    public StudentModeView(StudentModeSettings settings)
     {
         InitializeComponent();
         _nextNoteTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
         _nextNoteTimer.Tick += NextNoteTimer_Tick;
+        ApplySettings(settings);
     }
 
     public void OnActivate()
@@ -113,6 +120,7 @@ public partial class StudentModeView : UserControl, IGameMode
     private void ShowNoteNamesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.ShowNoteNames = ShowNoteNamesCheckBox.IsChecked == true;
+        NotifySettingsChanged();
         UpdateStatusText();
         RerenderStaff();
     }
@@ -120,11 +128,14 @@ public partial class StudentModeView : UserControl, IGameMode
     private void IncludeAccidentalsCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true;
+        NotifySettingsChanged();
         if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
         {
+            SyncAvailableNoteCheckBoxStates();
             PickRandomNote();
             return;
         }
+        SyncAvailableNoteCheckBoxStates();
         RerenderStaff();
     }
 
@@ -133,6 +144,7 @@ public partial class StudentModeView : UserControl, IGameMode
         bool includeOctaves = IncludeOctavesCheckBox.IsChecked == true;
         _staff.IncludeOctaves = includeOctaves;
         IncludeOctavesChanged?.Invoke(includeOctaves);
+        NotifySettingsChanged();
         UpdateStatusText();
         RerenderStaff();
     }
@@ -145,24 +157,45 @@ public partial class StudentModeView : UserControl, IGameMode
         }
 
         SyncNextNoteDelayUi();
+        NotifySettingsChanged();
     }
 
     private void NextNoteDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         SyncNextNoteDelayUi();
+        NotifySettingsChanged();
+    }
+
+    private void AvailableNoteCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loadingSettings)
+        {
+            return;
+        }
+
+        var selectedPitchClasses = GetAvailablePitchClasses();
+        if (selectedPitchClasses.Count == 0 && sender is CheckBox changed)
+        {
+            changed.IsChecked = true;
+            return;
+        }
+
+        NotifySettingsChanged();
+        PickRandomNote();
     }
 
     private void PickRandomNote()
     {
         _nextNoteTimer.Stop();
+        var availablePitchClasses = GetAvailablePitchClasses();
         if (_staff.IncludeAccidentals)
         {
-            var (note, mode) = _generator.RandomNoteWithAccidental();
+            var (note, mode) = _generator.RandomNoteWithAccidental(availablePitchClasses);
             SelectNote(note, mode);
         }
         else
         {
-            SelectNote(_generator.RandomNote(), StaffRenderer.AccidentalMode.Natural);
+            SelectNote(_generator.RandomNote(availablePitchClasses), StaffRenderer.AccidentalMode.Natural);
         }
     }
 
@@ -284,6 +317,96 @@ public partial class StudentModeView : UserControl, IGameMode
         NextNoteDelayValueText.Foreground = IsAutoAdvanceEnabled
             ? new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC))
             : new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77));
+    }
+
+    private void ApplySettings(StudentModeSettings settings)
+    {
+        _loadingSettings = true;
+        ShowNoteNamesCheckBox.IsChecked = settings.ShowNoteLabels;
+        IncludeAccidentalsCheckBox.IsChecked = settings.IncludeAccidentals;
+        IncludeOctavesCheckBox.IsChecked = settings.MatchOctave;
+        AutoAdvanceCheckBox.IsChecked = settings.AutoAdvance;
+        NextNoteDelaySlider.Value = Math.Clamp(settings.NextNoteDelaySeconds, NextNoteDelaySlider.Minimum, NextNoteDelaySlider.Maximum);
+        ApplyAvailablePitchClasses(settings.AvailablePitchClasses);
+
+        _staff.ShowNoteNames = settings.ShowNoteLabels;
+        _staff.IncludeAccidentals = settings.IncludeAccidentals;
+        _staff.IncludeOctaves = settings.MatchOctave;
+        _loadingSettings = false;
+        SyncNextNoteDelayUi();
+        SyncAvailableNoteCheckBoxStates();
+    }
+
+    private void NotifySettingsChanged()
+    {
+        if (_loadingSettings)
+        {
+            return;
+        }
+
+        SettingsChanged?.Invoke(new StudentModeSettings
+        {
+            ShowNoteLabels = ShowNoteNamesCheckBox.IsChecked == true,
+            IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true,
+            MatchOctave = IncludeOctavesCheckBox.IsChecked == true,
+            AutoAdvance = AutoAdvanceCheckBox.IsChecked == true,
+            NextNoteDelaySeconds = NextNoteDelaySlider.Value,
+            AvailablePitchClasses = GetAvailablePitchClasses().Order().ToArray()
+        });
+    }
+
+    private HashSet<int> GetAvailablePitchClasses()
+    {
+        return GetAvailableNoteCheckBoxes()
+            .Where(checkBox => checkBox.IsChecked == true)
+            .Select(checkBox => int.Parse(checkBox.Tag?.ToString() ?? "0"))
+            .ToHashSet();
+    }
+
+    private void ApplyAvailablePitchClasses(IEnumerable<int>? pitchClasses)
+    {
+        var available = (pitchClasses ?? Enumerable.Range(0, 12)).ToHashSet();
+        if (available.Count == 0)
+        {
+            available = Enumerable.Range(0, 12).ToHashSet();
+        }
+
+        foreach (var checkBox in GetAvailableNoteCheckBoxes())
+        {
+            int pitchClass = int.Parse(checkBox.Tag?.ToString() ?? "0");
+            checkBox.IsChecked = available.Contains(pitchClass);
+        }
+    }
+
+    private IEnumerable<CheckBox> GetAvailableNoteCheckBoxes()
+    {
+        yield return NoteCCheckBox;
+        yield return NoteCsCheckBox;
+        yield return NoteDCheckBox;
+        yield return NoteDsCheckBox;
+        yield return NoteECheckBox;
+        yield return NoteFCheckBox;
+        yield return NoteFsCheckBox;
+        yield return NoteGCheckBox;
+        yield return NoteGsCheckBox;
+        yield return NoteACheckBox;
+        yield return NoteAsCheckBox;
+        yield return NoteBCheckBox;
+    }
+
+    private void SyncAvailableNoteCheckBoxStates()
+    {
+        bool includeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true;
+        foreach (var checkBox in GetAvailableNoteCheckBoxes())
+        {
+            int pitchClass = int.Parse(checkBox.Tag?.ToString() ?? "0");
+            checkBox.IsEnabled = includeAccidentals || IsNaturalPitchClass(pitchClass);
+        }
+    }
+
+    private static bool IsNaturalPitchClass(int pitchClass)
+    {
+        return pitchClass is 0 or 2 or 4 or 5 or 7 or 9 or 11;
     }
 
     private static NoteDisplay.AccidentalDisplay ToDisplayAccidental(StaffRenderer.AccidentalMode mode)

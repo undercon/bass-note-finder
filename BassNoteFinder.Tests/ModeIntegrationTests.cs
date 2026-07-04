@@ -128,6 +128,90 @@ public class ModeIntegrationTests
         Assert.False(sliderEnabled);
     }
 
+    [Fact]
+    public void TeacherMode_ConstructedWithSettings_AppliesSavedOptions()
+    {
+        RunOnSta(() =>
+        {
+            var view = new TeacherModeView(new TeacherModeSettings
+            {
+                ShowNoteLabels = true,
+                IncludeAccidentals = true,
+                MatchOctave = true
+            });
+
+            Assert.True(((CheckBox)view.FindName("ShowNoteNamesCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            return 0;
+        });
+    }
+
+    [Fact]
+    public void StudentMode_ConstructedWithSettings_AppliesSavedOptionsAndNotes()
+    {
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView(new StudentModeSettings
+            {
+                ShowNoteLabels = true,
+                IncludeAccidentals = true,
+                MatchOctave = true,
+                AutoAdvance = false,
+                NextNoteDelaySeconds = 7,
+                AvailablePitchClasses = [4, 7]
+            });
+
+            Assert.True(((CheckBox)view.FindName("ShowNoteNamesCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            Assert.False(((CheckBox)view.FindName("AutoAdvanceCheckBox")).IsChecked);
+            Assert.Equal(7, ((Slider)view.FindName("NextNoteDelaySlider")).Value);
+            Assert.True(((CheckBox)view.FindName("NoteECheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("NoteGCheckBox")).IsChecked);
+            Assert.False(((CheckBox)view.FindName("NoteCCheckBox")).IsChecked);
+            return 0;
+        });
+    }
+
+    [Fact]
+    public void StudentMode_AvailableNoteToggle_RaisesSettingsChanged()
+    {
+        int[]? pitchClasses = null;
+
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView();
+            view.SettingsChanged += settings => pitchClasses = settings.AvailablePitchClasses;
+
+            var cSharp = (CheckBox)view.FindName("NoteCsCheckBox");
+            cSharp.IsChecked = false;
+            return 0;
+        });
+
+        Assert.NotNull(pitchClasses);
+        Assert.DoesNotContain(1, pitchClasses!);
+    }
+
+    [Fact]
+    public void StudentMode_AccidentalNoteOptions_DisableWhenAccidentalsAreOff()
+    {
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView(new StudentModeSettings { IncludeAccidentals = false });
+            var cSharp = (CheckBox)view.FindName("NoteCsCheckBox");
+            var e = (CheckBox)view.FindName("NoteECheckBox");
+
+            Assert.False(cSharp.IsEnabled);
+            Assert.True(e.IsEnabled);
+
+            var includeAccidentals = (CheckBox)view.FindName("IncludeAccidentalsCheckBox");
+            includeAccidentals.IsChecked = true;
+            Assert.True(cSharp.IsEnabled);
+            return 0;
+        });
+    }
+
     private static void SelectTarget(object view, Note note, StaffRenderer.AccidentalMode mode)
     {
         MethodInfo? select = view.GetType().GetMethod("SelectNote", BindingFlags.Instance | BindingFlags.NonPublic);

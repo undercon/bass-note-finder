@@ -63,7 +63,10 @@ The harness launches the real WPF shell with mic/config side effects disabled, c
 - `Start/Stop Mic`: toggles capture; startup state is persisted.
 - `Detected`: latest stable note (optional cents deviation).
 
-Mode-specific controls include note name display, accidental toggle, octave display, random target selection, and mode navigation.
+Mode-specific controls include note label display, accidental targets, octave matching, random target selection, and mode navigation.
+Student Mode also includes an available-note selector for random targets and auto-next delay controls.
+
+Most settings are remembered between launches, including footer controls, Teacher/Student mode options, Student available notes, auto-next delay, and window size/position.
 
 ## Release Automation (GitHub Actions)
 

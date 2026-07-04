@@ -23,16 +23,23 @@ public partial class TeacherModeView : UserControl, IGameMode
     private Note? _hoverNote;
     private StaffRenderer.AccidentalMode _hoverMode = StaffRenderer.AccidentalMode.Natural;
     private FretboardState _fretboardState = FretboardState.Hidden;
+    private bool _loadingSettings;
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
+    public event Action<TeacherModeSettings>? SettingsChanged;
     public bool IncludeOctaves => IncludeOctavesCheckBox.IsChecked == true;
 
-    public TeacherModeView()
+    public TeacherModeView() : this(new TeacherModeSettings())
+    {
+    }
+
+    public TeacherModeView(TeacherModeSettings settings)
     {
         InitializeComponent();
         _flashTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
         _flashTimer.Tick += FlashTimer_Tick;
+        ApplySettings(settings);
     }
 
     public void OnActivate()
@@ -147,6 +154,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void ShowNoteNamesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.ShowNoteNames = ShowNoteNamesCheckBox.IsChecked == true;
+        NotifySettingsChanged();
         UpdateStatusText();
         RerenderStaff();
     }
@@ -154,6 +162,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void IncludeAccidentalsCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         _staff.IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true;
+        NotifySettingsChanged();
         if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
         {
             _currentMode = StaffRenderer.AccidentalMode.Natural;
@@ -167,8 +176,37 @@ public partial class TeacherModeView : UserControl, IGameMode
         bool includeOctaves = IncludeOctavesCheckBox.IsChecked == true;
         _staff.IncludeOctaves = includeOctaves;
         IncludeOctavesChanged?.Invoke(includeOctaves);
+        NotifySettingsChanged();
         UpdateStatusText();
         RerenderStaff();
+    }
+
+    private void ApplySettings(TeacherModeSettings settings)
+    {
+        _loadingSettings = true;
+        ShowNoteNamesCheckBox.IsChecked = settings.ShowNoteLabels;
+        IncludeAccidentalsCheckBox.IsChecked = settings.IncludeAccidentals;
+        IncludeOctavesCheckBox.IsChecked = settings.MatchOctave;
+
+        _staff.ShowNoteNames = settings.ShowNoteLabels;
+        _staff.IncludeAccidentals = settings.IncludeAccidentals;
+        _staff.IncludeOctaves = settings.MatchOctave;
+        _loadingSettings = false;
+    }
+
+    private void NotifySettingsChanged()
+    {
+        if (_loadingSettings)
+        {
+            return;
+        }
+
+        SettingsChanged?.Invoke(new TeacherModeSettings
+        {
+            ShowNoteLabels = ShowNoteNamesCheckBox.IsChecked == true,
+            IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true,
+            MatchOctave = IncludeOctavesCheckBox.IsChecked == true
+        });
     }
 
     private void UpdateStatusText()

@@ -198,6 +198,33 @@ public class NoteGeneratorTests
             });
         }
     }
+
+    [Fact]
+    public void RandomNote_WithAllowedPitchClasses_ReturnsOnlyAllowedNaturals()
+    {
+        var generator = new NoteGenerator(28, 55);
+        var allowed = new HashSet<int> { 4 }; // E
+
+        for (int i = 0; i < 100; i++)
+        {
+            Note note = generator.RandomNote(allowed);
+            Assert.Equal(4, note.PitchClass);
+        }
+    }
+
+    [Fact]
+    public void RandomNoteWithAccidental_WithOnlyAccidentalAllowed_ReturnsAllowedAccidental()
+    {
+        var generator = new NoteGenerator(28, 55);
+        var allowed = new HashSet<int> { 1 }; // C#
+
+        for (int i = 0; i < 50; i++)
+        {
+            var (note, mode) = generator.RandomNoteWithAccidental(allowed);
+            Assert.Equal(1, note.PitchClass);
+            Assert.Contains(mode, new[] { StaffRenderer.AccidentalMode.Sharp, StaffRenderer.AccidentalMode.Flat });
+        }
+    }
 }
 
 [Trait("Category", "Pitch")]

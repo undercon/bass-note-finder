@@ -40,6 +40,7 @@ public partial class MainWindow : Window
         _enableRuntimeServices = enableRuntimeServices;
         InitializeComponent();
         _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
+        NormalizeConfig();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
@@ -97,9 +98,10 @@ public partial class MainWindow : Window
 
     private void ShowTeacherMode()
     {
-        var view = new TeacherModeView();
+        var view = new TeacherModeView(_config.TeacherMode);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
+        view.SettingsChanged += PersistTeacherModeSettings;
         _audio.PreferHigherOctave = view.IncludeOctaves;
         MainContent.Content = view;
         _activeMode = view;
@@ -108,9 +110,10 @@ public partial class MainWindow : Window
 
     private void ShowStudentMode()
     {
-        var view = new StudentModeView();
+        var view = new StudentModeView(_config.StudentMode);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
+        view.SettingsChanged += PersistStudentModeSettings;
         _audio.PreferHigherOctave = view.IncludeOctaves;
         MainContent.Content = view;
         _activeMode = view;
@@ -161,6 +164,17 @@ public partial class MainWindow : Window
         }
 
         _loadingConfig = false;
+    }
+
+    private void NormalizeConfig()
+    {
+        _config.TeacherMode ??= new TeacherModeSettings();
+        _config.StudentMode ??= new StudentModeSettings();
+
+        if (_config.StudentMode.AvailablePitchClasses == null || _config.StudentMode.AvailablePitchClasses.Length == 0)
+        {
+            _config.StudentMode.AvailablePitchClasses = Enumerable.Range(0, 12).ToArray();
+        }
     }
 
     private void ToggleMic_Click(object sender, RoutedEventArgs e)
@@ -279,6 +293,13 @@ public partial class MainWindow : Window
     private void ShowDeviationCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         ShowDeviation = ShowDeviationCheckBox.IsChecked == true;
+        if (_loadingConfig || !_enableRuntimeServices)
+        {
+            return;
+        }
+
+        _config.ShowDeviation = ShowDeviation;
+        AppConfigStore.Save(_config);
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -342,6 +363,8 @@ public partial class MainWindow : Window
 
         ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
         HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
+        ShowDeviationCheckBox.IsChecked = _config.ShowDeviation;
+        ShowDeviation = _config.ShowDeviation;
         _detectionPipeline.UseHarmonicCorrection = _config.UseHarmonicCorrection;
         UpdateThresholdDisplay(ThresholdSlider.Value);
         _audio.MinSignalLevel = (float)ThresholdSlider.Value;
@@ -356,6 +379,28 @@ public partial class MainWindow : Window
         }
 
         _config.SelectedInputDevice = InputCombo.SelectedItem as string ?? string.Empty;
+        AppConfigStore.Save(_config);
+    }
+
+    private void PersistTeacherModeSettings(TeacherModeSettings settings)
+    {
+        if (!_enableRuntimeServices)
+        {
+            return;
+        }
+
+        _config.TeacherMode = settings;
+        AppConfigStore.Save(_config);
+    }
+
+    private void PersistStudentModeSettings(StudentModeSettings settings)
+    {
+        if (!_enableRuntimeServices)
+        {
+            return;
+        }
+
+        _config.StudentMode = settings;
         AppConfigStore.Save(_config);
     }
 

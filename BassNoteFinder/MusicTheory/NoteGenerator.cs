@@ -16,39 +16,52 @@ public class NoteGenerator
         _maxMidi = maxMidi;
     }
 
-    public Note RandomNote()
+    public Note RandomNote(IReadOnlySet<int>? allowedPitchClasses = null)
     {
-        var naturals = GetNaturalNotes();
+        var naturals = GetNaturalNotes(allowedPitchClasses);
+        if (naturals.Count == 0)
+        {
+            naturals = GetNaturalNotes();
+        }
+
         return naturals[_rng.Next(naturals.Count)];
     }
 
-    public (Note note, StaffRenderer.AccidentalMode mode) RandomNoteWithAccidental()
+    public (Note note, StaffRenderer.AccidentalMode mode) RandomNoteWithAccidental(IReadOnlySet<int>? allowedPitchClasses = null)
     {
+        var naturals = GetNaturalNotes(allowedPitchClasses);
+        var accidentals = GetAccidentalNotes(allowedPitchClasses);
+
         if (_rng.Next(3) == 0)
         {
-            var naturals = GetNaturalNotes();
-            var note = naturals[_rng.Next(naturals.Count)];
-            return (note, StaffRenderer.AccidentalMode.Natural);
+            if (naturals.Count > 0)
+            {
+                var note = naturals[_rng.Next(naturals.Count)];
+                return (note, StaffRenderer.AccidentalMode.Natural);
+            }
         }
 
-        var accidentals = GetAccidentalNotes();
-        if (accidentals.Count == 0)
+        if (accidentals.Count > 0)
         {
-            var naturals = GetNaturalNotes();
-            return (naturals[_rng.Next(naturals.Count)], StaffRenderer.AccidentalMode.Natural);
+            var (accNote, accMode) = accidentals[_rng.Next(accidentals.Count)];
+            return (accNote, accMode);
         }
 
-        var (accNote, accMode) = accidentals[_rng.Next(accidentals.Count)];
-        return (accNote, accMode);
+        if (naturals.Count == 0)
+        {
+            naturals = GetNaturalNotes();
+        }
+
+        return (naturals[_rng.Next(naturals.Count)], StaffRenderer.AccidentalMode.Natural);
     }
 
-    private List<Note> GetNaturalNotes()
+    private List<Note> GetNaturalNotes(IReadOnlySet<int>? allowedPitchClasses = null)
     {
         var result = new List<Note>();
         for (int midi = _minMidi; midi <= _maxMidi; midi++)
         {
             int pc = (midi % 12 + 12) % 12;
-            if (NaturalPitchClasses.Contains(pc))
+            if (NaturalPitchClasses.Contains(pc) && IsAllowed(pc, allowedPitchClasses))
             {
                 result.Add(new Note(midi));
             }
@@ -56,13 +69,13 @@ public class NoteGenerator
         return result;
     }
 
-    private List<(Note note, StaffRenderer.AccidentalMode mode)> GetAccidentalNotes()
+    private List<(Note note, StaffRenderer.AccidentalMode mode)> GetAccidentalNotes(IReadOnlySet<int>? allowedPitchClasses = null)
     {
         var result = new List<(Note, StaffRenderer.AccidentalMode)>();
         for (int midi = _minMidi; midi <= _maxMidi; midi++)
         {
             int pc = (midi % 12 + 12) % 12;
-            if (!NaturalPitchClasses.Contains(pc))
+            if (!NaturalPitchClasses.Contains(pc) && IsAllowed(pc, allowedPitchClasses))
             {
                 if (midi > _minMidi)
                 {
@@ -75,6 +88,11 @@ public class NoteGenerator
             }
         }
         return result;
+    }
+
+    private static bool IsAllowed(int pitchClass, IReadOnlySet<int>? allowedPitchClasses)
+    {
+        return allowedPitchClasses == null || allowedPitchClasses.Count == 0 || allowedPitchClasses.Contains(pitchClass);
     }
 
     public static int[] BassStringOpenNotes => [28, 33, 38, 43];

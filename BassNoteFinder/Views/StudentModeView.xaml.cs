@@ -97,7 +97,7 @@ public partial class StudentModeView : UserControl, IGameMode
 
     private void UpdateStaffWidth()
     {
-        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
+        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth : StaffCanvas.Width;
     }
 
     private void RandomBtn_Click(object sender, RoutedEventArgs e)

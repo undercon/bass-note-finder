@@ -39,6 +39,22 @@ dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj
 dotnet run --project BassNoteFinder/BassNoteFinder.csproj
 ```
 
+The default test run excludes pitch-fixture tests tagged `Category=Pitch`. Run them explicitly when changing pitch detection:
+
+```powershell
+dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --settings BassNoteFinder.Tests/all.runsettings --filter "Category=Pitch"
+```
+
+### Visual Review Harness
+
+Generate deterministic screenshots for AI or human UI review:
+
+```powershell
+dotnet run --project VisualReviewHarness/VisualReviewHarness.csproj -- --mode all --output .artifacts/visual-review
+```
+
+The harness launches the real WPF shell with mic/config side effects disabled, captures Menu/Teacher/Student screenshots, and writes `AI_REVIEW_PROMPT.md` next to the images.
+
 ## Controls at a Glance
 
 - `Input`: choose microphone device.

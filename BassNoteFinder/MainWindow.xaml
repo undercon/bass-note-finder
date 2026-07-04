@@ -4,12 +4,13 @@
         Title="Bass Note Finder" Height="750" Width="1050"
         Icon="Assets/AppIcon.png"
         WindowStartupLocation="CenterScreen"
-        Background="#1E1E1E" Foreground="White"
+        Background="#18191B" Foreground="White"
         FontFamily="Segoe UI" FontSize="14"
         KeyDown="Window_KeyDown">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/AppStyles.xaml"/>
                 <ResourceDictionary Source="Resources/DarkComboBoxResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -22,64 +23,49 @@
 
         <ContentControl Grid.Row="0" x:Name="MainContent"/>
 
-        <Border Grid.Row="1" BorderBrush="#333" BorderThickness="1" CornerRadius="8"
-                Background="#2A2A2A" Padding="12" Margin="15,0,15,15">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="45"/>
-                    <ColumnDefinition Width="250"/>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="100"/>
-                </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Style="{StaticResource ControlBarBorderStyle}">
+            <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
+                    <TextBlock Text="Input" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="InputCombo" Width="250"
+                              SelectionChanged="InputCombo_SelectionChanged"
+                              Style="{StaticResource DarkInputComboBoxStyle}"/>
+                </StackPanel>
 
-                <TextBlock Grid.Column="0" Text="Input:" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <ComboBox Grid.Column="1" x:Name="InputCombo" Width="240"
-                          SelectionChanged="InputCombo_SelectionChanged"
-                          Style="{StaticResource DarkInputComboBoxStyle}"/>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
-                    <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="#AAA" Margin="0,0,6,0"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,4,6,4">
+                    <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <Slider x:Name="ThresholdSlider" Width="125" Minimum="0.005" Maximum="0.02"
                             SmallChange="0.001" LargeChange="0.002"
                             TickFrequency="0.001" IsSnapToTickEnabled="False"
                             ValueChanged="ThresholdSlider_ValueChanged"/>
                     <TextBlock x:Name="ThresholdValueText" Width="40" Margin="8,0,0,0"
-                               VerticalAlignment="Center" Foreground="#CCC" TextAlignment="Right"/>
+                               VerticalAlignment="Center" Foreground="{StaticResource PanelHeaderBrush}" TextAlignment="Right"/>
                 </StackPanel>
 
-                <CheckBox Grid.Column="3" x:Name="HarmonicCorrectionCheckBox" Content="Bass Harmonics"
-                          VerticalAlignment="Center" Margin="10,0,0,0"
-                          Foreground="#CCC"
+                <CheckBox x:Name="HarmonicCorrectionCheckBox" Content="Bass Harmonics"
+                          Style="{StaticResource ToolbarCheckBoxStyle}"
                           Checked="HarmonicCorrectionCheckBox_Changed"
                           Unchecked="HarmonicCorrectionCheckBox_Changed"/>
 
-                <Button Grid.Column="4" x:Name="ToggleMicBtn" Content="Start Mic"
-                        Width="110" Click="ToggleMic_Click" Margin="10,0"
-                        Padding="10,6" Background="#0E639C" Foreground="White"
-                        BorderThickness="0" Cursor="Hand"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"/>
+                <Button x:Name="ToggleMicBtn" Content="Start Mic"
+                        Width="112" Click="ToggleMic_Click" Margin="10,4"
+                        Style="{StaticResource PrimaryActionButtonStyle}"/>
 
-                <Border Grid.Column="5" BorderBrush="#555" BorderThickness="1" 
-                        CornerRadius="4" Padding="10,4" Margin="10,0">
+                <Border Style="{StaticResource StatusPillBorderStyle}" Margin="6,4">
                     <StackPanel Orientation="Horizontal">
                         <Ellipse x:Name="SignalDot" Width="12" Height="12" Margin="0,0,8,0"
                                  VerticalAlignment="Center" Fill="#666" Stroke="#888" StrokeThickness="1"/>
-                        <TextBlock Text="Detected: " VerticalAlignment="Center" Foreground="#AAA"/>
+                        <TextBlock Text="Detected" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,6,0"/>
                         <TextBlock x:Name="DetectedNoteText" Text="--" 
                                    Width="130" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
-                <CheckBox Grid.Column="6" x:Name="ShowDeviationCheckBox" Content="Deviation"
-                          VerticalAlignment="Center" Margin="10,0,0,0"
-                          Foreground="#CCC" IsChecked="False"
+                <CheckBox x:Name="ShowDeviationCheckBox" Content="Deviation"
+                          Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="ShowDeviationCheckBox_Changed"
                           Unchecked="ShowDeviationCheckBox_Changed"/>
-            </Grid>
+            </WrapPanel>
         </Border>
     </Grid>
 </Window>

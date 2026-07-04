@@ -6,6 +6,7 @@ using Xunit;
 
 namespace BassNoteFinder.Tests;
 
+[Trait("Category", "Pitch")]
 public class PitchDetectorTests
 {
     private record DetectionResult(string FileName, string PrimaryNote, double SuccessRate, Dictionary<string, int> Counts);

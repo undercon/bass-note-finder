@@ -3,6 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="Transparent"
              Loaded="TeacherModeView_Loaded">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/AppStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Grid Margin="15,15,15,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -12,17 +20,15 @@
 
         <TextBlock Grid.Row="0" x:Name="StatusText"
                     Text="Click the staff to place a note, or press Random."
-                    FontSize="14" HorizontalAlignment="Center"
-                    Foreground="#AAAAAA" Margin="0,0,0,8"
-                    TextAlignment="Center" TextWrapping="Wrap" MinHeight="24"/>
+                    Style="{StaticResource StatusTextStyle}"/>
 
         <UniformGrid Grid.Row="1" Rows="1" Columns="2" Margin="0,0,0,10">
-            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Staff" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,4" Foreground="#CCC"/>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="StaffCanvas" Width="500" Height="280" Margin="10"
+                    <TextBlock DockPanel.Dock="Top" Text="Staff" Style="{StaticResource PanelTitleTextStyle}"/>
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <Canvas x:Name="StaffCanvas" Width="670" Height="200" Margin="10,30,10,10"
                                 Background="Transparent"
                                 MouseLeftButtonDown="StaffCanvas_MouseLeftButtonDown"
                                 MouseMove="StaffCanvas_MouseMove"
@@ -30,7 +36,7 @@
                     </ScrollViewer>
                 </DockPanel>
             </Border>
-            <Border BorderBrush="#333" BorderThickness="1" Margin="5" CornerRadius="8" Background="#2A2A2A">
+            <Border Style="{StaticResource CardBorderStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -38,18 +44,18 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Fretboard" FontWeight="SemiBold"
-                               HorizontalAlignment="Center" Margin="0,8,0,2" Foreground="#CCC"/>
+                    <TextBlock Grid.Row="0" Text="Fretboard" Style="{StaticResource PanelTitleTextStyle}"/>
 
-                    <StackPanel x:Name="OverlayPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,4,0,2">
-                        <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="#555"
+                    <StackPanel x:Name="OverlayPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,8,0,10">
+                        <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="{StaticResource SecondaryBrush}"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="#777"
-                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="{StaticResource SubtleTextBrush}"
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden" VerticalAlignment="Center">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                             <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Margin="10" Background="#1E1E1E"/>
                         </ScrollViewer>
                     </Grid>
@@ -57,26 +63,30 @@
             </Border>
         </UniformGrid>
 
-        <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,4">
-            <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show Note Names"
-                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC"
-                      IsChecked="False"
-                      Checked="ShowNoteNamesCheckBox_Changed"
-                      Unchecked="ShowNoteNamesCheckBox_Changed"/>
-            <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Include Accidentals"
-                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC" IsChecked="False"
-                      Checked="IncludeAccidentalsCheckBox_Changed"
-                      Unchecked="IncludeAccidentalsCheckBox_Changed"/>
-            <CheckBox x:Name="IncludeOctavesCheckBox" Content="Include Octaves"
-                      VerticalAlignment="Center" Margin="5,4" Foreground="#CCC" IsChecked="False"
-                      Checked="IncludeOctavesCheckBox_Changed"
-                      Unchecked="IncludeOctavesCheckBox_Changed"/>
-            <Button x:Name="RandomBtn" Content="Random" Width="110" Click="RandomBtn_Click"
-                    Margin="15,4,5,4" Padding="10,6" Background="#2D8C2D" Foreground="White"
-                    BorderThickness="0" Cursor="Hand" HorizontalContentAlignment="Center"/>
-            <Button x:Name="BackToModeSelectionBtn" Content="Mode Selection" Width="140" Click="BackToModeSelectionBtn_Click"
-                    Margin="5,4" Padding="10,6" Background="#555" Foreground="White"
-                    BorderThickness="0" Cursor="Hand" HorizontalContentAlignment="Center"/>
-        </WrapPanel>
+        <Border Grid.Row="2" Style="{StaticResource ModeOptionsBorderStyle}">
+            <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Options" Style="{StaticResource ToolbarLabelTextStyle}"/>
+                <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show note labels"
+                          Style="{StaticResource ToolbarCheckBoxStyle}"
+                          IsChecked="False"
+                          Checked="ShowNoteNamesCheckBox_Changed"
+                          Unchecked="ShowNoteNamesCheckBox_Changed"/>
+                <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Accidental notes"
+                          Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
+                          Checked="IncludeAccidentalsCheckBox_Changed"
+                          Unchecked="IncludeAccidentalsCheckBox_Changed"/>
+                <CheckBox x:Name="IncludeOctavesCheckBox" Content="Match octave"
+                          Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
+                          Checked="IncludeOctavesCheckBox_Changed"
+                          Unchecked="IncludeOctavesCheckBox_Changed"/>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
+                    <Button x:Name="RandomBtn" Content="Random note" Width="124" Click="RandomBtn_Click"
+                            Margin="0,0,8,0" Style="{StaticResource SuccessActionButtonStyle}"/>
+                    <Button x:Name="BackToModeSelectionBtn" Content="Modes" Width="104" Click="BackToModeSelectionBtn_Click"
+                            Style="{StaticResource SecondaryActionButtonStyle}"/>
+                </StackPanel>
+            </WrapPanel>
+        </Border>
     </Grid>
 </UserControl>

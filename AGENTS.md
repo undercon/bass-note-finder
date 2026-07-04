@@ -30,16 +30,20 @@ dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj
 dotnet run --project BassNoteFinder/BassNoteFinder.csproj
 ```
 
+By default, `dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj` excludes tests tagged `Category=Pitch`.
+
 Useful targeted commands:
 
 ```powershell
-dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --filter "FullyQualifiedName~PitchDetector"
+dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --settings BassNoteFinder.Tests/all.runsettings --filter "Category=Pitch"
+dotnet test BassNoteFinder.Tests/BassNoteFinder.Tests.csproj --settings BassNoteFinder.Tests/all.runsettings --filter "FullyQualifiedName~PitchDetector"
 dotnet run --project PitchAnalyzer/PitchAnalyzer.csproj -- "BassNoteFinder.Tests/Resources/E-string.m4a"
 ```
 
 ## Testing Expectations
 
-- For pitch-related changes, run at least pitch detector tests (`PitchDetector*`) and one fixture check through `PitchAnalyzer`.
+- For pitch-related changes, run the `Category=Pitch` tests with `--settings BassNoteFinder.Tests/all.runsettings`, then run at least one fixture check through `PitchAnalyzer`.
+- Pitch tests are intentionally excluded from the default suite because the audio fixtures are slower and more specialized.
 - Do not widen note generation/mapping outside MIDI `28..55` unless explicitly requested.
 - If tests fail with file-lock errors, close any running `BassNoteFinder.exe` or `testhost.exe` and rerun.
 

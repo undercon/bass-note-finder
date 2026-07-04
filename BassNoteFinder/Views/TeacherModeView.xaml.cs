@@ -88,13 +88,13 @@ public partial class TeacherModeView : UserControl, IGameMode
 
     private void UpdateStaffWidth()
     {
-        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth - 20 : 500;
+        _staff.StaffWidth = StaffCanvas.ActualWidth > 100 ? StaffCanvas.ActualWidth : StaffCanvas.Width;
     }
 
     private void StaffCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var pos = e.GetPosition(StaffCanvas);
-        var result = StaffRenderer.NoteFromPoint(pos.X, pos.Y, _staff.IncludeAccidentals);
+        var result = StaffRenderer.NoteFromPoint(pos.X, pos.Y, _staff.IncludeAccidentals, _staff.StaffWidth);
         if (result != null)
         {
             var (note, mode) = result.Value;
@@ -105,7 +105,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private void StaffCanvas_MouseMove(object sender, MouseEventArgs e)
     {
         var pos = e.GetPosition(StaffCanvas);
-        var result = StaffRenderer.NoteFromPoint(pos.X, pos.Y, _staff.IncludeAccidentals);
+        var result = StaffRenderer.NoteFromPoint(pos.X, pos.Y, _staff.IncludeAccidentals, _staff.StaffWidth);
         if (result == null)
         {
             if (_hoverNote != null)

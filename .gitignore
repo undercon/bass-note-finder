@@ -6,3 +6,4 @@ obj/
 *.csproj.user
 .DS_Store
 BassNoteFinder/bin_verify*/
+.artifacts/

@@ -42,14 +42,18 @@ public class StaffRenderer
 
     public enum AccidentalMode { Natural, Sharp, Flat }
 
-    public static (Note note, AccidentalMode mode)? NoteFromPoint(double x, double y, bool includeAccidentals)
+    public static (Note note, AccidentalMode mode)? NoteFromPoint(
+        double x,
+        double y,
+        bool includeAccidentals,
+        double staffWidth = 500)
     {
         double pos = (StaffTop + 4 * Ls - y) / (Ls / 2.0);
         int posRounded = (int)Math.Round(pos);
         Note? natural = NoteFromStaffPosition(posRounded);
         if (natural == null) return null;
 
-        double centerX = 250;
+        double centerX = staffWidth / 2.0;
         double flatX = centerX - ColumnOffset;
         double sharpX = centerX + ColumnOffset;
 

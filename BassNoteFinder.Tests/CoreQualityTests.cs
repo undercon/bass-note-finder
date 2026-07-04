@@ -109,6 +109,16 @@ public class StaffRendererMappingTests
     }
 
     [Fact]
+    public void NoteFromPoint_WithWiderStaff_UsesVisualCenterColumn()
+    {
+        var result = StaffRenderer.NoteFromPoint(335, 40, includeAccidentals: false, staffWidth: 670);
+
+        Assert.True(result.HasValue);
+        Assert.Equal(StaffRenderer.AccidentalMode.Natural, result.Value.mode);
+        Assert.Equal("C3", result.Value.note.FullName);
+    }
+
+    [Fact]
     public void NoteFromPoint_OutOfRange_ReturnsNull()
     {
         var result = StaffRenderer.NoteFromPoint(250, -200, includeAccidentals: true);
@@ -190,6 +200,7 @@ public class NoteGeneratorTests
     }
 }
 
+[Trait("Category", "Pitch")]
 public class PitchDetectorOctaveTests
 {
     [Fact]

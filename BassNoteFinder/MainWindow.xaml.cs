@@ -8,6 +8,13 @@ using BassNoteFinder.Views;
 
 namespace BassNoteFinder;
 
+public enum InitialViewMode
+{
+    Menu,
+    Teacher,
+    Student
+}
+
 public partial class MainWindow : Window
 {
     private const double SignalIndicatorCeiling = 0.06;
@@ -15,16 +22,24 @@ public partial class MainWindow : Window
     private readonly AudioCaptureService _audio;
     private readonly StableNoteDetectionPipeline _detectionPipeline;
     private readonly AppConfig _config;
+    private readonly InitialViewMode _initialViewMode;
+    private readonly bool _enableRuntimeServices;
 
     private IGameMode? _activeMode;
     private bool _loadingConfig;
 
     public bool ShowDeviation { get; set; }
 
-    public MainWindow()
+    public MainWindow() : this(InitialViewMode.Menu, enableRuntimeServices: true)
     {
+    }
+
+    public MainWindow(InitialViewMode initialViewMode, bool enableRuntimeServices = true)
+    {
+        _initialViewMode = initialViewMode;
+        _enableRuntimeServices = enableRuntimeServices;
         InitializeComponent();
-        _config = AppConfigStore.Load();
+        _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
@@ -42,8 +57,27 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ShowMenu();
-        RestoreMicCaptureState();
+        ShowInitialView();
+        if (_enableRuntimeServices)
+        {
+            RestoreMicCaptureState();
+        }
+    }
+
+    private void ShowInitialView()
+    {
+        switch (_initialViewMode)
+        {
+            case InitialViewMode.Teacher:
+                ShowTeacherMode();
+                break;
+            case InitialViewMode.Student:
+                ShowStudentMode();
+                break;
+            default:
+                ShowMenu();
+                break;
+        }
     }
 
     private void ShowMenu()
@@ -87,6 +121,17 @@ public partial class MainWindow : Window
     {
         _loadingConfig = true;
         InputCombo.Items.Clear();
+
+        if (!_enableRuntimeServices)
+        {
+            InputCombo.Items.Add("Visual review input");
+            InputCombo.SelectedIndex = 0;
+            ToggleMicBtn.IsEnabled = false;
+            DetectedNoteText.Text = "--";
+            _loadingConfig = false;
+            return;
+        }
+
         var devices = AudioCaptureService.GetInputDevices();
         foreach (var d in devices)
             InputCombo.Items.Add(d);
@@ -191,6 +236,11 @@ public partial class MainWindow : Window
 
     private void PersistMicStartupPreference(bool startMicOnLaunch)
     {
+        if (!_enableRuntimeServices)
+        {
+            return;
+        }
+
         _config.StartMicOnLaunch = startMicOnLaunch;
         AppConfigStore.Save(_config);
     }
@@ -300,7 +350,7 @@ public partial class MainWindow : Window
 
     private void PersistSelectedInputDevice()
     {
-        if (_loadingConfig)
+        if (_loadingConfig || !_enableRuntimeServices)
         {
             return;
         }
@@ -336,7 +386,7 @@ public partial class MainWindow : Window
 
     private void WindowBoundsChanged(object? sender, EventArgs e)
     {
-        if (_loadingConfig || !IsLoaded || WindowState != WindowState.Normal)
+        if (!_enableRuntimeServices || _loadingConfig || !IsLoaded || WindowState != WindowState.Normal)
         {
             return;
         }
@@ -350,8 +400,12 @@ public partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        _config.StartMicOnLaunch = _audio.IsCapturing;
-        AppConfigStore.Save(_config);
+        if (_enableRuntimeServices)
+        {
+            _config.StartMicOnLaunch = _audio.IsCapturing;
+            AppConfigStore.Save(_config);
+        }
+
         _audio.Dispose();
         base.OnClosed(e);
     }

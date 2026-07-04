@@ -6,6 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/AppStyles.xaml"/>
                 <ResourceDictionary Source="Resources/DarkComboBoxResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

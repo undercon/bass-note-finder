@@ -18,22 +18,25 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Name="StatusText"
-                    Text="Click the staff to place a note, or press Random."
-                    Style="{StaticResource StatusTextStyle}"/>
+        <Border Grid.Row="0" Style="{StaticResource ModeHeaderBorderStyle}">
+            <StackPanel>
+                <TextBlock Text="TEACHER MODE · PICK THE TARGET" Style="{StaticResource EyebrowTextStyle}"/>
+                <TextBlock x:Name="StatusText" Text="Click the staff to place a note, or press Random."
+                           Style="{StaticResource StatusTextStyle}"/>
+            </StackPanel>
+        </Border>
 
         <UniformGrid Grid.Row="1" Rows="1" Columns="2" Margin="0,0,0,10">
             <Border Style="{StaticResource CardBorderStyle}">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="Staff" Style="{StaticResource PanelTitleTextStyle}"/>
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                  HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                        <Canvas x:Name="StaffCanvas" Width="670" Height="200" Margin="10,30,10,10"
+                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="10,30,10,10">
+                        <Canvas x:Name="StaffCanvas" Width="670" Height="200"
                                 Background="Transparent"
                                 MouseLeftButtonDown="StaffCanvas_MouseLeftButtonDown"
                                 MouseMove="StaffCanvas_MouseMove"
                                 MouseLeave="StaffCanvas_MouseLeave"/>
-                    </ScrollViewer>
+                    </Viewbox>
                 </DockPanel>
             </Border>
             <Border Style="{StaticResource CardBorderStyle}">
@@ -54,10 +57,9 @@
                     </StackPanel>
 
                     <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden" VerticalAlignment="Center">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                      HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Margin="10" Background="#1E1E1E"/>
-                        </ScrollViewer>
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="10">
+                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Background="#1E1E1E"/>
+                        </Viewbox>
                     </Grid>
                 </Grid>
             </Border>

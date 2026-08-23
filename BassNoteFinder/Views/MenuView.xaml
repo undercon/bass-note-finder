@@ -20,42 +20,51 @@
                        Text="v0.0.0"/>
         </Border>
 
-        <StackPanel Width="520">
-            <TextBlock Text="Bass Note Finder" FontSize="32" FontWeight="Bold"
+        <StackPanel Width="680">
+            <TextBlock Text="BASS PRACTICE" Style="{StaticResource EyebrowTextStyle}"
                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
-            <TextBlock Text="Choose a practice mode" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
-                       HorizontalAlignment="Center" Margin="0,0,0,24"/>
+            <TextBlock Text="Bass Note Finder" Style="{StaticResource PageTitleTextStyle}"
+                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBlock Text="Build confident note recognition, one clean note at a time."
+                       FontSize="15" Foreground="{StaticResource MutedTextBrush}"
+                       HorizontalAlignment="Center" Margin="0,0,0,28"/>
 
             <UniformGrid Columns="2" Rows="1">
-                <Border Style="{StaticResource CardBorderStyle}" Padding="16">
-                    <Grid Height="178">
+                <Border Style="{StaticResource CardBorderStyle}" Padding="24" Background="#172532" BorderBrush="#38667A">
+                    <Grid Height="206">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Teacher Mode" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Grid.Row="1" Text="You pick the target note on staff, then play it on bass."
-                                   Margin="0,8,0,12" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"/>
-                        <Button Grid.Row="2" Content="Open Teacher"
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="01 · GUIDE" Style="{StaticResource EyebrowTextStyle}"/>
+                            <TextBlock Text="Teacher Mode" FontSize="22" FontWeight="SemiBold" Foreground="White" Margin="0,7,0,0"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="Place a target on the staff, then find it on your bass."
+                                   Margin="0,12,0,16" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
+                        <Button Grid.Row="2" Content="Choose Teacher Mode"
                                 Click="TeacherModeButton_Click"
                                 Style="{StaticResource PrimaryActionButtonStyle}"/>
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource CardBorderStyle}" Padding="16">
-                    <Grid Height="178">
+                <Border Style="{StaticResource CardBorderStyle}" Padding="24" Background="#1C2630" BorderBrush="#5A5138">
+                    <Grid Height="206">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Student Mode" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
-                        <TextBlock Grid.Row="1" Text="Random notes are assigned automatically; focus on fast accurate hits."
-                                   Margin="0,8,0,12" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"/>
-                        <Button Grid.Row="2" Content="Open Student"
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="02 · TRAIN" Style="{StaticResource EyebrowTextStyle}" Foreground="#F0BE67"/>
+                            <TextBlock Text="Student Mode" FontSize="22" FontWeight="SemiBold" Foreground="White" Margin="0,7,0,0"/>
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="Get a random target and build fast, accurate recognition."
+                                   Margin="0,12,0,16" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
+                        <Button Grid.Row="2" Content="Start Student Mode"
                                 Click="StudentModeButton_Click"
                                 Style="{StaticResource SuccessActionButtonStyle}"/>
                     </Grid>

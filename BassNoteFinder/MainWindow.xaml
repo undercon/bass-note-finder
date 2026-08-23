@@ -4,7 +4,7 @@
         Title="Bass Note Finder" Height="750" Width="1050"
         Icon="Assets/AppIcon.png"
         WindowStartupLocation="CenterScreen"
-        Background="#18191B" Foreground="White"
+        Background="#0B1118" Foreground="White"
         FontFamily="Segoe UI" FontSize="14"
         KeyDown="Window_KeyDown">
     <Window.Resources>

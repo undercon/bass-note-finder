@@ -212,6 +212,30 @@ public class ModeIntegrationTests
         });
     }
 
+    [Fact]
+    public void TeacherMode_DisablingAccidentals_ReplacesAnAccidentalTargetWithANatural()
+    {
+        RunOnSta(() =>
+        {
+            var view = new TeacherModeView(new TeacherModeSettings { IncludeAccidentals = true });
+            SelectTarget(view, new Note(37), StaffRenderer.AccidentalMode.Sharp); // C#2
+
+            ((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked = false;
+
+            var currentNote = (Note?)view.GetType()
+                .GetField("_currentNote", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(view);
+            var currentMode = (StaffRenderer.AccidentalMode)view.GetType()
+                .GetField("_currentMode", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(view)!;
+
+            Assert.True(currentNote.HasValue);
+            Assert.Contains(currentNote.Value.PitchClass, new[] { 0, 2, 4, 5, 7, 9, 11 });
+            Assert.Equal(StaffRenderer.AccidentalMode.Natural, currentMode);
+            return 0;
+        });
+    }
+
     private static void SelectTarget(object view, Note note, StaffRenderer.AccidentalMode mode)
     {
         MethodInfo? select = view.GetType().GetMethod("SelectNote", BindingFlags.Instance | BindingFlags.NonPublic);

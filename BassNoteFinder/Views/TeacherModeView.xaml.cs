@@ -165,8 +165,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         NotifySettingsChanged();
         if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
         {
-            _currentMode = StaffRenderer.AccidentalMode.Natural;
-            _hoverMode = StaffRenderer.AccidentalMode.Natural;
+            PickRandomNote();
+            return;
         }
         RerenderStaff();
     }

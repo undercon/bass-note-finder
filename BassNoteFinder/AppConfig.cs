@@ -1,7 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace BassNoteFinder;
 
 public class AppConfig
 {
+    [JsonConverter(typeof(JsonStringEnumConverter<AppTheme>))]
+    public AppTheme Theme { get; set; } = AppTheme.System;
     public float MinSignalLevel { get; set; } = 0.01f;
     public string SelectedInputDevice { get; set; } = string.Empty;
     public bool UseHarmonicCorrection { get; set; } = true;
@@ -24,6 +28,7 @@ public class TeacherModeSettings
 
 public class StudentModeSettings : TeacherModeSettings
 {
+    public bool AdaptivePractice { get; set; }
     public bool AutoAdvance { get; set; } = true;
     public double NextNoteDelaySeconds { get; set; } = 3;
     public int[] AvailablePitchClasses { get; set; } = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];

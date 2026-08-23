@@ -15,7 +15,7 @@
                 Margin="0,0,8,0" Padding="8,4"
                 Style="{StaticResource StatusPillBorderStyle}">
             <TextBlock x:Name="VersionText"
-                       Foreground="{StaticResource MutedTextBrush}"
+                       Foreground="{DynamicResource MutedTextBrush}"
                        FontSize="12"
                        Text="v0.0.0"/>
         </Border>
@@ -26,11 +26,13 @@
             <TextBlock Text="Bass Note Finder" Style="{StaticResource PageTitleTextStyle}"
                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
             <TextBlock Text="Build confident note recognition, one clean note at a time."
-                       FontSize="15" Foreground="{StaticResource MutedTextBrush}"
+                       FontSize="15" Foreground="{DynamicResource MutedTextBrush}"
                        HorizontalAlignment="Center" Margin="0,0,0,28"/>
 
             <UniformGrid Columns="2" Rows="1">
-                <Border Style="{StaticResource CardBorderStyle}" Padding="24" Background="#172532" BorderBrush="#38667A">
+                <Border Style="{StaticResource CardBorderStyle}" Padding="24"
+                        Background="{DynamicResource TeacherCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource TeacherCardBorderBrush}">
                     <Grid Height="206">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -40,17 +42,20 @@
 
                         <StackPanel Grid.Row="0">
                             <TextBlock Text="01 · GUIDE" Style="{StaticResource EyebrowTextStyle}"/>
-                            <TextBlock Text="Teacher Mode" FontSize="22" FontWeight="SemiBold" Foreground="White" Margin="0,7,0,0"/>
+                            <TextBlock Text="Teacher Mode" FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PanelHeaderBrush}" Margin="0,7,0,0"/>
                         </StackPanel>
                         <TextBlock Grid.Row="1" Text="Place a target on the staff, then find it on your bass."
-                                   Margin="0,12,0,16" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
+                                   Margin="0,12,0,16" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
                         <Button Grid.Row="2" Content="Choose Teacher Mode"
                                 Click="TeacherModeButton_Click"
                                 Style="{StaticResource PrimaryActionButtonStyle}"/>
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource CardBorderStyle}" Padding="24" Background="#1C2630" BorderBrush="#5A5138">
+                <Border Style="{StaticResource CardBorderStyle}" Padding="24"
+                        Background="{DynamicResource StudentCardBackgroundBrush}"
+                        BorderBrush="{DynamicResource StudentCardBorderBrush}">
                     <Grid Height="206">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -59,11 +64,13 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
-                            <TextBlock Text="02 · TRAIN" Style="{StaticResource EyebrowTextStyle}" Foreground="#F0BE67"/>
-                            <TextBlock Text="Student Mode" FontSize="22" FontWeight="SemiBold" Foreground="White" Margin="0,7,0,0"/>
+                            <TextBlock Text="02 · TRAIN" Style="{StaticResource EyebrowTextStyle}"
+                                       Foreground="{DynamicResource WarmAccentBrush}"/>
+                            <TextBlock Text="Student Mode" FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PanelHeaderBrush}" Margin="0,7,0,0"/>
                         </StackPanel>
                         <TextBlock Grid.Row="1" Text="Get a random target and build fast, accurate recognition."
-                                   Margin="0,12,0,16" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
+                                   Margin="0,12,0,16" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
                         <Button Grid.Row="2" Content="Start Student Mode"
                                 Click="StudentModeButton_Click"
                                 Style="{StaticResource SuccessActionButtonStyle}"/>

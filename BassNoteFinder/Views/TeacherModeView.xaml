@@ -50,15 +50,15 @@
                     <TextBlock Grid.Row="0" Text="Fretboard" Style="{StaticResource PanelTitleTextStyle}"/>
 
                     <StackPanel x:Name="OverlayPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,8,0,10">
-                        <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="{StaticResource SecondaryBrush}"
+                        <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="{DynamicResource SecondaryBrush}"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="{StaticResource SubtleTextBrush}"
+                        <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="{DynamicResource SubtleTextBrush}"
                                    HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
 
                     <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden" VerticalAlignment="Center">
                         <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="10">
-                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Background="#1E1E1E"/>
+                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Background="{DynamicResource FretboardWoodBrush}"/>
                         </Viewbox>
                     </Grid>
                 </Grid>

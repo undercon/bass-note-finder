@@ -64,9 +64,11 @@ The harness launches the real WPF shell with mic/config side effects disabled, c
 - `Detected`: latest stable note (optional cents deviation).
 
 Mode-specific controls include note label display, accidental targets, octave matching, random target selection, and mode navigation.
-Student Mode also includes an available-note selector for random targets and auto-next delay controls.
+Student Mode also includes an available-note selector, auto-next delay controls, and an optional adaptive coach. The coach learns from mistakes and response time, revisits weaker notes, and interleaves them with useful musical intervals instead of repeating one target continuously.
 
-Most settings are remembered between launches, including footer controls, Teacher/Student mode options, Student available notes, auto-next delay, and window size/position.
+Most settings are remembered between launches, including footer controls, Teacher/Student mode options, Student available notes, adaptive-coach preference, auto-next delay, and window size/position. Adaptive performance history is session-based.
+
+The footer theme picker supports Dark, Light, and System. System follows the operating-system color palette exposed by the UI framework.
 
 ## Release Automation (GitHub Actions)
 

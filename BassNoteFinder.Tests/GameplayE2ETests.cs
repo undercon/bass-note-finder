@@ -20,8 +20,8 @@ public class TeacherModeE2ETests
     private static string StatusText(TeacherModeView view) =>
         ((TextBlock)view.FindName("StatusText")).Text;
 
-    private static Brush StatusForeground(TeacherModeView view) =>
-        ((TextBlock)view.FindName("StatusText")).Foreground;
+    private static Color StatusForegroundColor(TeacherModeView view) =>
+        ((SolidColorBrush)((TextBlock)view.FindName("StatusText")).Foreground).Color;
 
     private static string OverlayIconText(TeacherModeView view) =>
         ((TextBlock)view.FindName("OverlayIcon")).Text;
@@ -124,15 +124,15 @@ public class TeacherModeE2ETests
     [Fact]
     public void CorrectNote_StatusForegroundIsGreen()
     {
-        Brush fg = TestHelpers.RunOnSta(() =>
+        Color color = TestHelpers.RunOnSta(() =>
         {
             var view = new TeacherModeView();
             TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
             view.OnNoteDetected(new Note(43), 0);
-            return StatusForeground(view);
+            return StatusForegroundColor(view);
         });
 
-        Assert.Equal(Brushes.LimeGreen, fg);
+        Assert.Equal(Colors.LimeGreen, color);
     }
 
     [Fact]
@@ -180,15 +180,15 @@ public class TeacherModeE2ETests
     [Fact]
     public void WrongNote_StatusForegroundIsOrangeRed()
     {
-        Brush fg = TestHelpers.RunOnSta(() =>
+        Color color = TestHelpers.RunOnSta(() =>
         {
             var view = new TeacherModeView();
             TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
             view.OnNoteDetected(new Note(40), 0);
-            return StatusForeground(view);
+            return StatusForegroundColor(view);
         });
 
-        Assert.Equal(Brushes.OrangeRed, fg);
+        Assert.Equal(Colors.OrangeRed, color);
     }
 
     [Fact]
@@ -258,8 +258,8 @@ public class StudentModeE2ETests
     private static string StatusText(StudentModeView view) =>
         ((TextBlock)view.FindName("StatusText")).Text;
 
-    private static Brush StatusForeground(StudentModeView view) =>
-        ((TextBlock)view.FindName("StatusText")).Foreground;
+    private static Color StatusForegroundColor(StudentModeView view) =>
+        ((SolidColorBrush)((TextBlock)view.FindName("StatusText")).Foreground).Color;
 
     private static string OverlayBodyText(StudentModeView view) =>
         ((TextBlock)view.FindName("OverlayText")).Text;
@@ -321,7 +321,7 @@ public class StudentModeE2ETests
     [Fact]
     public void CorrectNote_StatusForegroundIsGreen()
     {
-        Brush fg = TestHelpers.RunOnSta(() =>
+        Color color = TestHelpers.RunOnSta(() =>
         {
             var view = new StudentModeView();
             view.OnActivate();
@@ -329,10 +329,10 @@ public class StudentModeE2ETests
             Note? current = TestHelpers.GetPrivateField<Note?>(view, "_currentNote");
             Assert.NotNull(current);
             view.OnNoteDetected(current!.Value, 0);
-            return StatusForeground(view);
+            return StatusForegroundColor(view);
         });
 
-        Assert.Equal(Brushes.LimeGreen, fg);
+        Assert.Equal(Colors.LimeGreen, color);
     }
 
     [Fact]
@@ -369,15 +369,15 @@ public class StudentModeE2ETests
     [Fact]
     public void WrongNote_StatusForegroundIsOrangeRed()
     {
-        Brush fg = TestHelpers.RunOnSta(() =>
+        Color color = TestHelpers.RunOnSta(() =>
         {
             var view = new StudentModeView();
             TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
             view.OnNoteDetected(new Note(40), 0);
-            return StatusForeground(view);
+            return StatusForegroundColor(view);
         });
 
-        Assert.Equal(Brushes.OrangeRed, fg);
+        Assert.Equal(Colors.OrangeRed, color);
     }
 
     [Fact]

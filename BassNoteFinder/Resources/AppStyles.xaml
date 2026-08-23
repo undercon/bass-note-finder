@@ -11,10 +11,31 @@
     <SolidColorBrush x:Key="SecondaryBrush" Color="#334659"/>
     <SolidColorBrush x:Key="FocusBorderBrush" Color="#65E0D5"/>
     <SolidColorBrush x:Key="AccentBrush" Color="#65E0D5"/>
+    <SolidColorBrush x:Key="ModeHeaderBorderBrush" Color="#35566A"/>
+    <SolidColorBrush x:Key="StatusPillBackgroundBrush" Color="#101923"/>
+    <SolidColorBrush x:Key="CheckBoxGlyphBrush" Color="#172432"/>
+    <SolidColorBrush x:Key="CheckBoxBorderBrush" Color="#52657A"/>
+    <SolidColorBrush x:Key="CheckBoxHoverBrush" Color="#203344"/>
+    <SolidColorBrush x:Key="CheckMarkBrush" Color="#071114"/>
+    <SolidColorBrush x:Key="ButtonHoverBorderBrush" Color="#8DF5EC"/>
+    <SolidColorBrush x:Key="ButtonTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TeacherCardBackgroundBrush" Color="#172532"/>
+    <SolidColorBrush x:Key="TeacherCardBorderBrush" Color="#38667A"/>
+    <SolidColorBrush x:Key="StudentCardBackgroundBrush" Color="#1C2630"/>
+    <SolidColorBrush x:Key="StudentCardBorderBrush" Color="#5A5138"/>
+    <SolidColorBrush x:Key="WarmAccentBrush" Color="#F0BE67"/>
+    <SolidColorBrush x:Key="CorrectBrush" Color="#32CD32"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#FF4500"/>
+    <LinearGradientBrush x:Key="FretboardWoodBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#241208" Offset="0"/>
+        <GradientStop Color="#5C3118" Offset="0.35"/>
+        <GradientStop Color="#3B1E0F" Offset="0.7"/>
+        <GradientStop Color="#1E0E06" Offset="1"/>
+    </LinearGradientBrush>
 
     <Style x:Key="CardBorderStyle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource PanelBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource PanelBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Margin" Value="7"/>
@@ -34,32 +55,32 @@
     <Style x:Key="ModeHeaderBorderStyle" TargetType="Border" BasedOn="{StaticResource CardBorderStyle}">
         <Setter Property="Padding" Value="18,13"/>
         <Setter Property="Margin" Value="7,0,7,12"/>
-        <Setter Property="BorderBrush" Value="#35566A"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ModeHeaderBorderBrush}"/>
     </Style>
 
     <Style x:Key="StatusPillBorderStyle" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource PanelBorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="10,5"/>
-        <Setter Property="Background" Value="#101923"/>
+        <Setter Property="Background" Value="{DynamicResource StatusPillBackgroundBrush}"/>
     </Style>
 
     <Style x:Key="PanelTitleTextStyle" TargetType="TextBlock">
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource PanelHeaderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PanelHeaderBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,13,0,6"/>
     </Style>
 
     <Style x:Key="EyebrowTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="FontSize" Value="11"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style x:Key="PageTitleTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource PanelHeaderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PanelHeaderBrush}"/>
         <Setter Property="FontSize" Value="38"/>
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
@@ -67,7 +88,7 @@
     <Style x:Key="StatusTextStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
-        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
         <Setter Property="Margin" Value="0,2,0,0"/>
         <Setter Property="TextAlignment" Value="Left"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
@@ -75,7 +96,7 @@
     </Style>
 
     <Style x:Key="ToolbarCheckBoxStyle" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{StaticResource PanelHeaderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PanelHeaderBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="6,4"/>
         <Setter Property="Cursor" Value="Hand"/>
@@ -89,9 +110,10 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Border x:Name="Glyph" Width="15" Height="15" CornerRadius="4"
-                                    Background="#172432" BorderBrush="#52657A" BorderThickness="1"
+                                    Background="{DynamicResource CheckBoxGlyphBrush}"
+                                    BorderBrush="{DynamicResource CheckBoxBorderBrush}" BorderThickness="1"
                                     VerticalAlignment="Center"/>
-                            <Path x:Name="Check" Grid.Column="0" Margin="3" Stroke="#071114" StrokeThickness="2"
+                            <Path x:Name="Check" Grid.Column="0" Margin="3" Stroke="{DynamicResource CheckMarkBrush}" StrokeThickness="2"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" Opacity="0"
                                   Data="M 1 5 L 4.5 8.5 L 11 1.5"/>
                             <ContentPresenter Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center"
@@ -100,12 +122,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Glyph" Property="Background" Value="{StaticResource AccentBrush}"/>
-                            <Setter TargetName="Glyph" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="Glyph" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Glyph" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                             <Setter TargetName="Check" Property="Opacity" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#203344"/>
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource CheckBoxHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Root" Property="Opacity" Value="0.42"/>
@@ -117,13 +139,13 @@
     </Style>
 
     <Style x:Key="ToolbarLabelTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="8,4,4,4"/>
     </Style>
 
     <Style x:Key="ActionButtonStyle" TargetType="Button">
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource ButtonTextBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -147,14 +169,14 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.92"/>
-                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#8DF5EC"/>
+                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource ButtonHoverBorderBrush}"/>
                             <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.78"/>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{StaticResource FocusBorderBrush}"/>
+                            <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}"/>
                             <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -167,14 +189,14 @@
     </Style>
 
     <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
     </Style>
 
     <Style x:Key="SuccessActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource SuccessBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
     </Style>
 
     <Style x:Key="SecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-        <Setter Property="Background" Value="{StaticResource SecondaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SecondaryBrush}"/>
     </Style>
 </ResourceDictionary>

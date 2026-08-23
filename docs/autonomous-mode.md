@@ -1,19 +1,20 @@
-# Autonomous Mode (Planned)
+# Student Mode
 
 ## Status
 
-Not yet implemented. Placeholder for future development.
+Implemented.
 
 ## Summary
 
-A self-study mode where the student plays alone without a teacher. The application generates notes and the student plays them. The application auto-advances after correct notes.
+A self-study mode where the application generates targets and can auto-advance after correct notes. Students can restrict the available pitch classes and optionally enable an adaptive coach.
 
-## Planned Features
+## Features
 
 - **Auto-advance**: after a correct note, the app automatically presents a new note.
-- **Configurable options**: note range, difficulty, timing, fretboard reveal behavior.
-- **Scoring**: likely includes streak/accuracy tracking (unlike Teacher Mode).
-- **Fretboard reveal**: behavior TBD — may show correct position after attempts.
+- **Configurable options**: available notes, accidentals, octave matching, labels, and timing.
+- **Adaptive coach**: tracks mistakes, skips, and response time during the current session.
+- **Smooth reinforcement**: prioritizes weak notes while preventing immediate repetition and favoring step, fourth/fifth, and chord-tone movement between targets.
+- **Fretboard feedback**: reveals the played position after an attempt.
 
 ## Distinction from Teacher Mode
 
@@ -21,6 +22,6 @@ A self-study mode where the student plays alone without a teacher. The applicati
 |--------|-------------|-----------------|
 | Note selection | Teacher picks manually | App generates automatically |
 | Auto-advance | No | Yes |
-| Scoring | No | Likely yes |
-| Fretboard reveal | Student's position only (wrong) | TBD |
+| Learning model | No | Optional session-based adaptive coach |
+| Fretboard reveal | Student's position only (wrong) | Played position and correct feedback |
 | Settings | Shared footer | Shared footer + mode-specific options |

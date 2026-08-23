@@ -157,6 +157,7 @@ public class ModeIntegrationTests
                 ShowNoteLabels = true,
                 IncludeAccidentals = true,
                 MatchOctave = true,
+                AdaptivePractice = true,
                 AutoAdvance = false,
                 NextNoteDelaySeconds = 7,
                 AvailablePitchClasses = [4, 7]
@@ -165,6 +166,7 @@ public class ModeIntegrationTests
             Assert.True(((CheckBox)view.FindName("ShowNoteNamesCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked);
             Assert.False(((CheckBox)view.FindName("AutoAdvanceCheckBox")).IsChecked);
             Assert.Equal(7, ((Slider)view.FindName("NextNoteDelaySlider")).Value);
             Assert.True(((CheckBox)view.FindName("NoteECheckBox")).IsChecked);
@@ -191,6 +193,23 @@ public class ModeIntegrationTests
 
         Assert.NotNull(pitchClasses);
         Assert.DoesNotContain(1, pitchClasses!);
+    }
+
+    [Fact]
+    public void StudentMode_AdaptiveCoachToggle_RaisesSettingsChanged()
+    {
+        bool? adaptivePractice = null;
+
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView();
+            view.SettingsChanged += settings => adaptivePractice = settings.AdaptivePractice;
+
+            ((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked = true;
+            return 0;
+        });
+
+        Assert.True(adaptivePractice);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using BassNoteFinder.Audio;
@@ -41,6 +42,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
         NormalizeConfig();
+        ThemeCombo.ItemsSource = Enum.GetValues<AppTheme>();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
@@ -91,6 +93,7 @@ public partial class MainWindow : Window
 
         _detectionPipeline.Reset();
         var menu = new MenuView();
+        ApplyThemeResources(menu);
         menu.TeacherModeSelected += ShowTeacherMode;
         menu.StudentModeSelected += ShowStudentMode;
         MainContent.Content = menu;
@@ -99,6 +102,7 @@ public partial class MainWindow : Window
     private void ShowTeacherMode()
     {
         var view = new TeacherModeView(_config.TeacherMode);
+        ApplyThemeResources(view);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         view.SettingsChanged += PersistTeacherModeSettings;
@@ -111,6 +115,7 @@ public partial class MainWindow : Window
     private void ShowStudentMode()
     {
         var view = new StudentModeView(_config.StudentMode);
+        ApplyThemeResources(view);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         view.SettingsChanged += PersistStudentModeSettings;
@@ -302,6 +307,23 @@ public partial class MainWindow : Window
         AppConfigStore.Save(_config);
     }
 
+    private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ThemeCombo.SelectedItem is not AppTheme selectedTheme)
+        {
+            return;
+        }
+
+        ApplyTheme(selectedTheme);
+        if (_loadingConfig || !_enableRuntimeServices)
+        {
+            return;
+        }
+
+        _config.Theme = selectedTheme;
+        AppConfigStore.Save(_config);
+    }
+
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -328,7 +350,7 @@ public partial class MainWindow : Window
             DetectedNoteText.Text = ShowDeviation
                 ? $"{detected.FullName} ({centsOff:F0}\u00A2)"
                 : detected.FullName;
-            DetectedNoteText.Foreground = Brushes.White;
+            DetectedNoteText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
             _activeMode?.OnNoteDetected(detected, centsOff);
         });
     }
@@ -364,11 +386,35 @@ public partial class MainWindow : Window
         ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
         HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
         ShowDeviationCheckBox.IsChecked = _config.ShowDeviation;
+        ThemeCombo.SelectedItem = _config.Theme;
         ShowDeviation = _config.ShowDeviation;
         _detectionPipeline.UseHarmonicCorrection = _config.UseHarmonicCorrection;
         UpdateThresholdDisplay(ThresholdSlider.Value);
         _audio.MinSignalLevel = (float)ThresholdSlider.Value;
         _loadingConfig = false;
+    }
+
+    private void ApplyTheme(AppTheme selectedTheme)
+    {
+        AppTheme resolvedTheme = ThemeManager.Apply(selectedTheme, this);
+        if (MainContent.Content is FrameworkElement content)
+        {
+            ThemeManager.ApplyResources(content.Resources, resolvedTheme);
+        }
+
+        if (_activeMode is TeacherModeView teacherMode)
+        {
+            teacherMode.RefreshTheme();
+        }
+        else if (_activeMode is StudentModeView studentMode)
+        {
+            studentMode.RefreshTheme();
+        }
+    }
+
+    private void ApplyThemeResources(FrameworkElement element)
+    {
+        ThemeManager.ApplyResources(element.Resources, ThemeManager.Resolve(_config.Theme));
     }
 
     private void PersistSelectedInputDevice()

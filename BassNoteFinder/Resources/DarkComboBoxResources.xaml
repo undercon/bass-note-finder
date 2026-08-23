@@ -6,9 +6,10 @@
     <SolidColorBrush x:Key="DarkComboHoverBrush" Color="#3F3F46"/>
     <SolidColorBrush x:Key="DarkComboPressedBrush" Color="#0E639C"/>
     <SolidColorBrush x:Key="DarkComboSelectedBrush" Color="#0E639C"/>
+    <SolidColorBrush x:Key="DarkComboForegroundBrush" Color="#FFFFFF"/>
 
     <Style x:Key="DarkComboBoxItemStyle" TargetType="ComboBoxItem">
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource DarkComboForegroundBrush}"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -23,10 +24,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource DarkComboHoverBrush}"/>
+                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DarkComboHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource DarkComboSelectedBrush}"/>
+                            <Setter TargetName="ItemBorder" Property="Background" Value="{DynamicResource DarkComboSelectedBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -35,9 +36,9 @@
     </Style>
 
     <Style x:Key="DarkInputComboBoxStyle" TargetType="ComboBox">
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="Background" Value="{StaticResource DarkComboBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource DarkComboBorderBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource DarkComboForegroundBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource DarkComboBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DarkComboBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="ItemContainerStyle" Value="{StaticResource DarkComboBoxItemStyle}"/>
@@ -82,7 +83,7 @@
                                           Height="6"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
-                                          Fill="White"
+                                          Fill="{DynamicResource DarkComboForegroundBrush}"
                                           Data="M 0 0 L 5 6 L 10 0 Z"/>
                                 </Grid>
                             </Border>
@@ -97,7 +98,7 @@
                             <Border Margin="0,4,0,0"
                                     MinWidth="{TemplateBinding ActualWidth}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}"
-                                    Background="{StaticResource DarkComboPopupBrush}"
+                                    Background="{DynamicResource DarkComboPopupBrush}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="1"
                                     CornerRadius="4">
@@ -109,10 +110,10 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="OuterBorder" Property="Background" Value="{StaticResource DarkComboHoverBrush}"/>
+                            <Setter TargetName="OuterBorder" Property="Background" Value="{DynamicResource DarkComboHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
-                            <Setter TargetName="OuterBorder" Property="Background" Value="{StaticResource DarkComboPressedBrush}"/>
+                            <Setter TargetName="OuterBorder" Property="Background" Value="{DynamicResource DarkComboPressedBrush}"/>
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter TargetName="PART_Popup" Property="MinHeight" Value="24"/>

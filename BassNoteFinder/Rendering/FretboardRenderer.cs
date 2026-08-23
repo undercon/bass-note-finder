@@ -68,7 +68,7 @@ public class FretboardRenderer
             canvas.Children.Add(new Ellipse
             {
                 Width = MarkerSize, Height = MarkerSize,
-                Fill = Brushes.DimGray
+                Fill = new SolidColorBrush(Color.FromRgb(0xD8, 0xB5, 0x78))
             });
             Canvas.SetLeft(canvas.Children[^1] as Ellipse, mx - MarkerSize / 2);
             Canvas.SetTop(canvas.Children[^1] as Ellipse, my - MarkerSize / 2);
@@ -79,7 +79,7 @@ public class FretboardRenderer
         canvas.Children.Add(new Ellipse
         {
             Width = MarkerSize, Height = MarkerSize,
-            Fill = Brushes.DimGray
+            Fill = new SolidColorBrush(Color.FromRgb(0xD8, 0xB5, 0x78))
         });
         Canvas.SetLeft(canvas.Children[^1] as Ellipse, mx12 - MarkerSize / 2);
         Canvas.SetTop(canvas.Children[^1] as Ellipse, my12 - MarkerSize / 2);
@@ -88,7 +88,7 @@ public class FretboardRenderer
         canvas.Children.Add(new Ellipse
         {
             Width = MarkerSize, Height = MarkerSize,
-            Fill = Brushes.DimGray
+            Fill = new SolidColorBrush(Color.FromRgb(0xD8, 0xB5, 0x78))
         });
         Canvas.SetLeft(canvas.Children[^1] as Ellipse, mx12 - MarkerSize / 2);
         Canvas.SetTop(canvas.Children[^1] as Ellipse, my12 - MarkerSize / 2);

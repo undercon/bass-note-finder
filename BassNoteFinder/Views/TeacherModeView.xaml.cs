@@ -54,6 +54,11 @@ public partial class TeacherModeView : UserControl, IGameMode
         _flashTimer.Stop();
     }
 
+    public void RefreshTheme()
+    {
+        RerenderStaff();
+    }
+
     public void OnNoteDetected(Note note, double centsOff)
     {
         if (_currentNote == null) return;
@@ -67,7 +72,7 @@ public partial class TeacherModeView : UserControl, IGameMode
             StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
-            StatusText.Foreground = Brushes.LimeGreen;
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
         }
         else
         {
@@ -75,7 +80,7 @@ public partial class TeacherModeView : UserControl, IGameMode
             StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
-            StatusText.Foreground = Brushes.OrangeRed;
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
         }
     }
 
@@ -218,14 +223,14 @@ public partial class TeacherModeView : UserControl, IGameMode
                 StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
                 StatusText.FontSize = 16;
                 StatusText.FontWeight = FontWeights.Bold;
-                StatusText.Foreground = Brushes.White;
+                StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
             }
             else
             {
                 StatusText.Text = "Find this note on your bass.";
                 StatusText.FontSize = 14;
                 StatusText.FontWeight = FontWeights.Normal;
-                StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+                StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
             }
         }
         else
@@ -233,7 +238,7 @@ public partial class TeacherModeView : UserControl, IGameMode
             StatusText.Text = "Click the staff to place a note, or press Random.";
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
-            StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
         }
     }
 
@@ -297,9 +302,9 @@ public partial class TeacherModeView : UserControl, IGameMode
                 _fretboardRenderer.Render(FretboardCanvas);
                 OverlayIcon.Text = "?";
                 OverlayIcon.FontSize = 48;
-                OverlayIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));
+                OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryBrush");
                 OverlayText.Text = "Play the note to reveal";
-                OverlayText.Foreground = new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77));
+                OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "SubtleTextBrush");
                 break;
 
             case FretboardState.FlashingWrong:
@@ -319,9 +324,9 @@ public partial class TeacherModeView : UserControl, IGameMode
                 {
                     OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
                     OverlayIcon.FontSize = 36;
-                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";
-                    OverlayText.Foreground = Brushes.LimeGreen;
+                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
                         Color.FromRgb(0xFF, 0x32, 0x32));
                 }
@@ -329,9 +334,9 @@ public partial class TeacherModeView : UserControl, IGameMode
                 {
                     OverlayIcon.Text = "\u2713";
                     OverlayIcon.FontSize = 48;
-                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";
-                    OverlayText.Foreground = Brushes.LimeGreen;
+                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                 }
                 break;
         }

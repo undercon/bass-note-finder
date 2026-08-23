@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -16,10 +17,14 @@ public partial class StudentModeView : UserControl, IGameMode
     private readonly StaffRenderer _staff = new();
     private readonly FretboardRenderer _fretboardRenderer = new();
     private readonly DispatcherTimer _nextNoteTimer;
+    private readonly AdaptivePracticeEngine _adaptivePractice = new();
 
     private Note? _currentNote;
     private StaffRenderer.AccidentalMode _currentMode = StaffRenderer.AccidentalMode.Natural;
     private bool _loadingSettings;
+    private long _targetStartedTimestamp;
+    private int _mistakesOnCurrentTarget;
+    private bool _targetResultRecorded = true;
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
@@ -41,12 +46,18 @@ public partial class StudentModeView : UserControl, IGameMode
     public void OnActivate()
     {
         _nextNoteTimer.Stop();
-        PickRandomNote();
+        PickRandomNote(recordSkippedTarget: false);
     }
 
     public void OnDeactivate()
     {
         _nextNoteTimer.Stop();
+    }
+
+    public void RefreshTheme()
+    {
+        RerenderStaff();
+        SyncNextNoteDelayUi();
     }
 
     public void OnNoteDetected(Note note, double centsOff)
@@ -59,6 +70,7 @@ public partial class StudentModeView : UserControl, IGameMode
 
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
+            RecordAdaptiveResult(target);
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             if (IsAutoAdvanceEnabled)
             {
@@ -75,15 +87,19 @@ public partial class StudentModeView : UserControl, IGameMode
             }
             StatusText.FontSize = 18;
             StatusText.FontWeight = FontWeights.SemiBold;
-            StatusText.Foreground = Brushes.LimeGreen;
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
         }
         else
         {
+            if (IsAdaptivePracticeEnabled && !_targetResultRecorded)
+            {
+                _mistakesOnCurrentTarget++;
+            }
             SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {playedDisplay}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
-            StatusText.Foreground = Brushes.OrangeRed;
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
         }
     }
 
@@ -132,7 +148,7 @@ public partial class StudentModeView : UserControl, IGameMode
         if (!_staff.IncludeAccidentals && _currentMode != StaffRenderer.AccidentalMode.Natural)
         {
             SyncAvailableNoteCheckBoxStates();
-            PickRandomNote();
+            PickRandomNote(recordSkippedTarget: false);
             return;
         }
         SyncAvailableNoteCheckBoxStates();
@@ -160,6 +176,25 @@ public partial class StudentModeView : UserControl, IGameMode
         NotifySettingsChanged();
     }
 
+    private void AdaptivePracticeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_loadingSettings)
+        {
+            return;
+        }
+
+        if (IsAdaptivePracticeEnabled && _currentNote.HasValue)
+        {
+            BeginTrackingCurrentTarget();
+        }
+        else
+        {
+            _targetResultRecorded = true;
+        }
+
+        NotifySettingsChanged();
+    }
+
     private void NextNoteDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         SyncNextNoteDelayUi();
@@ -181,21 +216,35 @@ public partial class StudentModeView : UserControl, IGameMode
         }
 
         NotifySettingsChanged();
-        PickRandomNote();
+        PickRandomNote(recordSkippedTarget: false);
     }
 
-    private void PickRandomNote()
+    private void PickRandomNote(bool recordSkippedTarget = true)
     {
         _nextNoteTimer.Stop();
-        var availablePitchClasses = GetAvailablePitchClasses();
+        if (recordSkippedTarget)
+        {
+            RecordSkippedAdaptiveTarget();
+        }
+
+        HashSet<int> availablePitchClasses = GetPlayablePitchClasses();
+        IReadOnlySet<int> targetPitchClasses = availablePitchClasses;
+        if (IsAdaptivePracticeEnabled)
+        {
+            targetPitchClasses = new HashSet<int>
+            {
+                _adaptivePractice.ChooseNext(availablePitchClasses)
+            };
+        }
+
         if (_staff.IncludeAccidentals)
         {
-            var (note, mode) = _generator.RandomNoteWithAccidental(availablePitchClasses);
+            var (note, mode) = _generator.RandomNoteWithAccidental(targetPitchClasses);
             SelectNote(note, mode);
         }
         else
         {
-            SelectNote(_generator.RandomNote(availablePitchClasses), StaffRenderer.AccidentalMode.Natural);
+            SelectNote(_generator.RandomNote(targetPitchClasses), StaffRenderer.AccidentalMode.Natural);
         }
     }
 
@@ -203,6 +252,7 @@ public partial class StudentModeView : UserControl, IGameMode
     {
         _currentNote = note;
         _currentMode = mode;
+        BeginTrackingCurrentTarget();
         SetFretboardState(FretboardState.Hidden);
         UpdateStatusText();
         RerenderStaff();
@@ -228,7 +278,7 @@ public partial class StudentModeView : UserControl, IGameMode
             StatusText.Text = "Play the shown note.";
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
-            StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
             return;
         }
 
@@ -237,14 +287,14 @@ public partial class StudentModeView : UserControl, IGameMode
             StatusText.Text = $"Play: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
-            StatusText.Foreground = Brushes.White;
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
         }
         else
         {
             StatusText.Text = "Play this note on your bass.";
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
-            StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
+            StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
         }
     }
 
@@ -258,9 +308,9 @@ public partial class StudentModeView : UserControl, IGameMode
                 _fretboardRenderer.Render(FretboardCanvas);
                 OverlayIcon.Text = "?";
                 OverlayIcon.FontSize = 48;
-                OverlayIcon.Foreground = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));
+                OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryBrush");
                 OverlayText.Text = "Play the note to reveal";
-                OverlayText.Foreground = new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77));
+                OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "SubtleTextBrush");
                 break;
 
             case FretboardState.FlashingWrong:
@@ -279,18 +329,18 @@ public partial class StudentModeView : UserControl, IGameMode
                 {
                     OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
                     OverlayIcon.FontSize = 36;
-                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";
-                    OverlayText.Foreground = Brushes.LimeGreen;
+                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     _fretboardRenderer.Render(FretboardCanvas, studentNote.Value, Color.FromRgb(0xFF, 0x32, 0x32));
                 }
                 else
                 {
                     OverlayIcon.Text = "\u2713";
                     OverlayIcon.FontSize = 48;
-                    OverlayIcon.Foreground = Brushes.LimeGreen;
+                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";
-                    OverlayText.Foreground = Brushes.LimeGreen;
+                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                 }
                 break;
         }
@@ -303,6 +353,7 @@ public partial class StudentModeView : UserControl, IGameMode
     }
 
     private bool IsAutoAdvanceEnabled => AutoAdvanceCheckBox.IsChecked == true;
+    private bool IsAdaptivePracticeEnabled => AdaptivePracticeCheckBox.IsChecked == true;
 
     private void SyncNextNoteDelayUi()
     {
@@ -314,9 +365,9 @@ public partial class StudentModeView : UserControl, IGameMode
         int seconds = (int)Math.Round(NextNoteDelaySlider.Value);
         NextNoteDelayValueText.Text = $"{seconds}s";
         NextNoteDelaySlider.IsEnabled = IsAutoAdvanceEnabled;
-        NextNoteDelayValueText.Foreground = IsAutoAdvanceEnabled
-            ? new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC))
-            : new SolidColorBrush(Color.FromRgb(0x77, 0x77, 0x77));
+        NextNoteDelayValueText.SetResourceReference(
+            TextBlock.ForegroundProperty,
+            IsAutoAdvanceEnabled ? "PanelHeaderBrush" : "SubtleTextBrush");
     }
 
     private void ApplySettings(StudentModeSettings settings)
@@ -325,6 +376,7 @@ public partial class StudentModeView : UserControl, IGameMode
         ShowNoteNamesCheckBox.IsChecked = settings.ShowNoteLabels;
         IncludeAccidentalsCheckBox.IsChecked = settings.IncludeAccidentals;
         IncludeOctavesCheckBox.IsChecked = settings.MatchOctave;
+        AdaptivePracticeCheckBox.IsChecked = settings.AdaptivePractice;
         AutoAdvanceCheckBox.IsChecked = settings.AutoAdvance;
         NextNoteDelaySlider.Value = Math.Clamp(settings.NextNoteDelaySeconds, NextNoteDelaySlider.Minimum, NextNoteDelaySlider.Maximum);
         ApplyAvailablePitchClasses(settings.AvailablePitchClasses);
@@ -349,6 +401,7 @@ public partial class StudentModeView : UserControl, IGameMode
             ShowNoteLabels = ShowNoteNamesCheckBox.IsChecked == true,
             IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true,
             MatchOctave = IncludeOctavesCheckBox.IsChecked == true,
+            AdaptivePractice = IsAdaptivePracticeEnabled,
             AutoAdvance = AutoAdvanceCheckBox.IsChecked == true,
             NextNoteDelaySeconds = NextNoteDelaySlider.Value,
             AvailablePitchClasses = GetAvailablePitchClasses().Order().ToArray()
@@ -361,6 +414,55 @@ public partial class StudentModeView : UserControl, IGameMode
             .Where(checkBox => checkBox.IsChecked == true)
             .Select(checkBox => int.Parse(checkBox.Tag?.ToString() ?? "0"))
             .ToHashSet();
+    }
+
+    private HashSet<int> GetPlayablePitchClasses()
+    {
+        HashSet<int> selected = GetAvailablePitchClasses();
+        if (_staff.IncludeAccidentals)
+        {
+            return selected;
+        }
+
+        selected.RemoveWhere(pitchClass => !IsNaturalPitchClass(pitchClass));
+        return selected.Count > 0
+            ? selected
+            : new HashSet<int> { 0, 2, 4, 5, 7, 9, 11 };
+    }
+
+    private void BeginTrackingCurrentTarget()
+    {
+        _targetStartedTimestamp = Stopwatch.GetTimestamp();
+        _mistakesOnCurrentTarget = 0;
+        _targetResultRecorded = !IsAdaptivePracticeEnabled;
+    }
+
+    private void RecordAdaptiveResult(Note target)
+    {
+        if (!IsAdaptivePracticeEnabled || _targetResultRecorded)
+        {
+            return;
+        }
+
+        _adaptivePractice.RecordResult(
+            target.PitchClass,
+            _mistakesOnCurrentTarget,
+            Stopwatch.GetElapsedTime(_targetStartedTimestamp));
+        _targetResultRecorded = true;
+    }
+
+    private void RecordSkippedAdaptiveTarget()
+    {
+        if (!IsAdaptivePracticeEnabled || _targetResultRecorded || !_currentNote.HasValue)
+        {
+            return;
+        }
+
+        _adaptivePractice.RecordResult(
+            _currentNote.Value.PitchClass,
+            Math.Max(1, _mistakesOnCurrentTarget),
+            Stopwatch.GetElapsedTime(_targetStartedTimestamp));
+        _targetResultRecorded = true;
     }
 
     private void ApplyAvailablePitchClasses(IEnumerable<int>? pitchClasses)

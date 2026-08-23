@@ -4,7 +4,8 @@
         Title="Bass Note Finder" Height="750" Width="1050"
         Icon="Assets/AppIcon.png"
         WindowStartupLocation="CenterScreen"
-        Background="#0B1118" Foreground="White"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource PanelHeaderBrush}"
         FontFamily="Segoe UI" FontSize="14"
         KeyDown="Window_KeyDown">
     <Window.Resources>
@@ -26,20 +27,20 @@
         <Border Grid.Row="1" Style="{StaticResource ControlBarBorderStyle}">
             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
-                    <TextBlock Text="Input" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Input" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <ComboBox x:Name="InputCombo" Width="250"
                               SelectionChanged="InputCombo_SelectionChanged"
                               Style="{StaticResource DarkInputComboBoxStyle}"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,4,6,4">
-                    <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <Slider x:Name="ThresholdSlider" Width="125" Minimum="0.005" Maximum="0.02"
                             SmallChange="0.001" LargeChange="0.002"
                             TickFrequency="0.001" IsSnapToTickEnabled="False"
                             ValueChanged="ThresholdSlider_ValueChanged"/>
                     <TextBlock x:Name="ThresholdValueText" Width="40" Margin="8,0,0,0"
-                               VerticalAlignment="Center" Foreground="{StaticResource PanelHeaderBrush}" TextAlignment="Right"/>
+                               VerticalAlignment="Center" Foreground="{DynamicResource PanelHeaderBrush}" TextAlignment="Right"/>
                 </StackPanel>
 
                 <CheckBox x:Name="HarmonicCorrectionCheckBox" Content="Bass Harmonics"
@@ -54,8 +55,9 @@
                 <Border Style="{StaticResource StatusPillBorderStyle}" Margin="6,4">
                     <StackPanel Orientation="Horizontal">
                         <Ellipse x:Name="SignalDot" Width="12" Height="12" Margin="0,0,8,0"
-                                 VerticalAlignment="Center" Fill="#666" Stroke="#888" StrokeThickness="1"/>
-                        <TextBlock Text="Detected" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,6,0"/>
+                                 VerticalAlignment="Center" Fill="{DynamicResource SecondaryBrush}"
+                                 Stroke="{DynamicResource PanelBorderBrush}" StrokeThickness="1"/>
+                        <TextBlock Text="Detected" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,6,0"/>
                         <TextBlock x:Name="DetectedNoteText" Text="--" 
                                    Width="130" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -65,6 +67,14 @@
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="ShowDeviationCheckBox_Changed"
                           Unchecked="ShowDeviationCheckBox_Changed"/>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,4,6,4">
+                    <TextBlock Text="Theme" VerticalAlignment="Center"
+                               Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="ThemeCombo" Width="96"
+                              SelectionChanged="ThemeCombo_SelectionChanged"
+                              Style="{StaticResource DarkInputComboBoxStyle}"/>
+                </StackPanel>
             </WrapPanel>
         </Border>
     </Grid>

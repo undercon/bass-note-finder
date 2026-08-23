@@ -237,7 +237,7 @@ public class StaffRenderer
                 Text = name,
                 FontSize = 14,
                 FontWeight = FontWeights.Bold,
-                Foreground = NoteNameBrush
+                Foreground = canvas.TryFindResource("PanelHeaderBrush") as Brush ?? NoteNameBrush
             };
             Canvas.SetLeft(nameTb, cx + NoteW / 2 + 8);
             Canvas.SetTop(nameTb, noteY - 10);

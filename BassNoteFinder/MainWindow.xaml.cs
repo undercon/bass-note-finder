@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using BassNoteFinder.Audio;
 using BassNoteFinder.Gameplay;
+using BassNoteFinder.Localization;
 using BassNoteFinder.MusicTheory;
 using BassNoteFinder.Views;
 
@@ -18,6 +19,10 @@ public enum InitialViewMode
 
 public partial class MainWindow : Window
 {
+    private sealed record LocalizedOption<T>(T Value, string DisplayName)
+    {
+        public override string ToString() => DisplayName;
+    }
     private const double SignalIndicatorCeiling = 0.06;
 
     private readonly AudioCaptureService _audio;
@@ -44,8 +49,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
         NormalizeConfig();
-        ThemeCombo.ItemsSource = Enum.GetValues<AppTheme>();
-        NotationCombo.ItemsSource = Enum.GetValues<NoteDisplay.NamingConvention>();
+        LocalizationManager.Apply(_config.Language);
+        RefreshLocalizedPickers();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
@@ -137,7 +142,7 @@ public partial class MainWindow : Window
 
         if (!_enableRuntimeServices)
         {
-            InputCombo.Items.Add("Visual review input");
+            InputCombo.Items.Add(Text("VisualReviewInput"));
             InputCombo.SelectedIndex = 0;
             ToggleMicBtn.IsEnabled = false;
             DetectedNoteText.Text = "--";
@@ -170,7 +175,7 @@ public partial class MainWindow : Window
         else
         {
             ToggleMicBtn.IsEnabled = false;
-            DetectedNoteText.Text = "No devices";
+            DetectedNoteText.Text = Text("NoDevices");
         }
 
         _loadingConfig = false;
@@ -245,7 +250,7 @@ public partial class MainWindow : Window
 
     private void SetMicUiState(bool isCapturing)
     {
-        ToggleMicBtn.Content = isCapturing ? "Stop Mic" : "Start Mic";
+        ToggleMicBtn.Content = isCapturing ? Text("StopMic") : Text("StartMic");
         if (!isCapturing)
         {
             DetectedNoteText.Text = "--";
@@ -254,7 +259,7 @@ public partial class MainWindow : Window
         }
         else if (DetectedNoteText.Text == "--")
         {
-            DetectedNoteText.Text = "Listening...";
+            DetectedNoteText.Text = Text("Listening");
         }
     }
 
@@ -288,18 +293,6 @@ public partial class MainWindow : Window
         AppConfigStore.Save(_config);
     }
 
-    private void HarmonicCorrectionCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        _detectionPipeline.UseHarmonicCorrection = HarmonicCorrectionCheckBox.IsChecked == true;
-        if (_loadingConfig)
-        {
-            return;
-        }
-
-        _config.UseHarmonicCorrection = HarmonicCorrectionCheckBox.IsChecked == true;
-        AppConfigStore.Save(_config);
-    }
-
     private void ShowDeviationCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         ShowDeviation = ShowDeviationCheckBox.IsChecked == true;
@@ -314,11 +307,12 @@ public partial class MainWindow : Window
 
     private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ThemeCombo.SelectedItem is not AppTheme selectedTheme)
+        if (ThemeCombo.SelectedItem is not LocalizedOption<AppTheme> option)
         {
             return;
         }
 
+        AppTheme selectedTheme = option.Value;
         ApplyTheme(selectedTheme);
         if (_loadingConfig || !_enableRuntimeServices)
         {
@@ -331,11 +325,12 @@ public partial class MainWindow : Window
 
     private void NotationCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (NotationCombo.SelectedItem is not NoteDisplay.NamingConvention notation)
+        if (NotationCombo.SelectedItem is not LocalizedOption<NoteDisplay.NamingConvention> option)
         {
             return;
         }
 
+        NoteDisplay.NamingConvention notation = option.Value;
         _config.Notation = notation;
         ApplyNotation(notation);
         if (_loadingConfig || !_enableRuntimeServices)
@@ -344,6 +339,28 @@ public partial class MainWindow : Window
         }
 
         AppConfigStore.Save(_config);
+    }
+
+    private void LanguageCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loadingConfig)
+        {
+            return;
+        }
+
+        if (LanguageCombo.SelectedItem is not LocalizedOption<AppLanguage> option)
+        {
+            return;
+        }
+
+        _config.Language = option.Value;
+        LocalizationManager.Apply(option.Value);
+        RefreshLocalizedPickers();
+        ShowMenu();
+        if (!_loadingConfig && _enableRuntimeServices)
+        {
+            AppConfigStore.Save(_config);
+        }
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -395,7 +412,7 @@ public partial class MainWindow : Window
     private void ApplyConfig()
     {
         _loadingConfig = true;
-        Width = Math.Max(_config.WindowWidth, MinWidth > 0 ? MinWidth : 1050);
+        Width = Math.Max(_config.WindowWidth, MinWidth > 0 ? MinWidth : 1200);
         Height = Math.Max(_config.WindowHeight, MinHeight > 0 ? MinHeight : 750);
 
         if (_config.WindowLeft.HasValue && _config.WindowTop.HasValue)
@@ -406,12 +423,12 @@ public partial class MainWindow : Window
         }
 
         ThresholdSlider.Value = Math.Clamp(_config.MinSignalLevel, (float)ThresholdSlider.Minimum, (float)ThresholdSlider.Maximum);
-        HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
         ShowDeviationCheckBox.IsChecked = _config.ShowDeviation;
-        ThemeCombo.SelectedItem = _config.Theme;
-        NotationCombo.SelectedItem = _config.Notation;
+        ThemeCombo.SelectedItem = ThemeCombo.Items.Cast<LocalizedOption<AppTheme>>().First(option => option.Value == _config.Theme);
+        NotationCombo.SelectedItem = NotationCombo.Items.Cast<LocalizedOption<NoteDisplay.NamingConvention>>().First(option => option.Value == _config.Notation);
+        LanguageCombo.SelectedItem = LanguageCombo.Items.Cast<LocalizedOption<AppLanguage>>().First(option => option.Value == _config.Language);
         ShowDeviation = _config.ShowDeviation;
-        _detectionPipeline.UseHarmonicCorrection = _config.UseHarmonicCorrection;
+        _detectionPipeline.UseHarmonicCorrection = true;
         UpdateThresholdDisplay(ThresholdSlider.Value);
         _audio.MinSignalLevel = (float)ThresholdSlider.Value;
         _loadingConfig = false;
@@ -434,6 +451,35 @@ public partial class MainWindow : Window
             studentMode.RefreshTheme();
         }
     }
+
+    private void RefreshLocalizedPickers()
+    {
+        bool wasLoadingConfig = _loadingConfig;
+        _loadingConfig = true;
+        ThemeCombo.ItemsSource = new[]
+        {
+            new LocalizedOption<AppTheme>(AppTheme.System, Text("System")),
+            new LocalizedOption<AppTheme>(AppTheme.Dark, Text("Dark")),
+            new LocalizedOption<AppTheme>(AppTheme.Light, Text("Light"))
+        };
+        NotationCombo.ItemsSource = new[]
+        {
+            new LocalizedOption<NoteDisplay.NamingConvention>(NoteDisplay.NamingConvention.Standard, Text("Standard")),
+            new LocalizedOption<NoteDisplay.NamingConvention>(NoteDisplay.NamingConvention.Solfege, Text("Solfege"))
+        };
+        LanguageCombo.ItemsSource = new[]
+        {
+            new LocalizedOption<AppLanguage>(AppLanguage.System, Text("System")),
+            new LocalizedOption<AppLanguage>(AppLanguage.English, Text("English")),
+            new LocalizedOption<AppLanguage>(AppLanguage.Greek, Text("Greek"))
+        };
+        ThemeCombo.SelectedItem = ThemeCombo.Items.Cast<LocalizedOption<AppTheme>>().First(option => option.Value == _config.Theme);
+        NotationCombo.SelectedItem = NotationCombo.Items.Cast<LocalizedOption<NoteDisplay.NamingConvention>>().First(option => option.Value == _config.Notation);
+        LanguageCombo.SelectedItem = LanguageCombo.Items.Cast<LocalizedOption<AppLanguage>>().First(option => option.Value == _config.Language);
+        _loadingConfig = wasLoadingConfig;
+    }
+
+    private string Text(string key) => LocalizationManager.GetString(key);
 
     private void ApplyThemeResources(FrameworkElement element)
     {

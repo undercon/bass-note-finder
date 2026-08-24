@@ -329,11 +329,11 @@ public class StudentModeE2ETests
             var view = new StudentModeView();
             var slider = (Slider)view.FindName("NextNoteDelaySlider");
             var label = (TextBlock)view.FindName("NextNoteDelayValueText");
-            slider.Value = 7.0;
+            slider.Value = 4.5;
             return label.Text;
         });
 
-        Assert.Equal("7s", text);
+        Assert.Equal("4.5s", text);
     }
 
     [Fact]

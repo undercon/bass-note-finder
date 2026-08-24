@@ -38,19 +38,19 @@ public class ThemeManagerTests
     [Fact]
     public void MainWindow_ThemePickerOffersAllChoicesAndAppliesLightTheme()
     {
-        (AppTheme[] choices, Color background) = TestHelpers.RunOnSta(() =>
+        (string[] choices, Color background) = TestHelpers.RunOnSta(() =>
         {
             var window = new MainWindow(InitialViewMode.Menu, enableRuntimeServices: false);
             var themeCombo = (ComboBox)window.FindName("ThemeCombo");
-            AppTheme[] items = themeCombo.Items.Cast<AppTheme>().ToArray();
+            string[] items = themeCombo.Items.Cast<object>().Select(item => item.ToString()!).ToArray();
 
-            themeCombo.SelectedItem = AppTheme.Light;
+            themeCombo.SelectedItem = themeCombo.Items.Cast<object>().Single(item => item.ToString() == "Light");
             Color color = ((SolidColorBrush)window.Background).Color;
             window.Close();
             return (items, color);
         });
 
-        Assert.Equal(new[] { AppTheme.System, AppTheme.Dark, AppTheme.Light }, choices);
+        Assert.Equal(new[] { "System", "Dark", "Light" }, choices);
         Assert.Equal(Color.FromRgb(0xEE, 0xF3, 0xF6), background);
     }
 
@@ -61,13 +61,13 @@ public class ThemeManagerTests
         {
             var window = new MainWindow(InitialViewMode.Menu, enableRuntimeServices: false);
             var notationCombo = (ComboBox)window.FindName("NotationCombo");
-            var items = notationCombo.Items.Cast<MusicTheory.NoteDisplay.NamingConvention>().ToArray();
+            var items = notationCombo.Items.Cast<object>().Select(item => item.ToString()).ToArray();
             window.Close();
             return items;
         });
 
         Assert.Equal(
-            new[] { MusicTheory.NoteDisplay.NamingConvention.Standard, MusicTheory.NoteDisplay.NamingConvention.Solfege },
+            new[] { "Standard", "Solfège" },
             choices);
     }
 }

@@ -174,7 +174,7 @@ public class ModeIntegrationTests
                 RevealTargetOnMiss = true,
                 AdaptivePractice = true,
                 AutoAdvance = false,
-                NextNoteDelaySeconds = 7,
+                NextNoteDelaySeconds = 4.5,
                 AvailablePitchClasses = [4, 7]
             });
 
@@ -184,7 +184,7 @@ public class ModeIntegrationTests
             Assert.True(((CheckBox)view.FindName("RevealTargetOnMissCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked);
             Assert.False(((CheckBox)view.FindName("AutoAdvanceCheckBox")).IsChecked);
-            Assert.Equal(7, ((Slider)view.FindName("NextNoteDelaySlider")).Value);
+            Assert.Equal(4.5, ((Slider)view.FindName("NextNoteDelaySlider")).Value);
             Assert.True(((CheckBox)view.FindName("NoteECheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("NoteGCheckBox")).IsChecked);
             Assert.False(((CheckBox)view.FindName("NoteCCheckBox")).IsChecked);

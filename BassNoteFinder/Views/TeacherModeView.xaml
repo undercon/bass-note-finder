@@ -27,8 +27,8 @@
                 <TextBlock x:Name="FeedbackIcon" Visibility="Collapsed" FontSize="30" FontWeight="Bold"
                            VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <StackPanel Grid.Column="1">
-                    <TextBlock Text="TEACHER MODE · PICK THE TARGET" Style="{StaticResource EyebrowTextStyle}"/>
-                    <TextBlock x:Name="StatusText" Text="Click the staff to place a note, or press Random."
+                    <TextBlock Text="{DynamicResource TeacherEyebrow}" Style="{StaticResource EyebrowTextStyle}"/>
+                    <TextBlock x:Name="StatusText" Text="{DynamicResource TeacherStart}"
                                Style="{StaticResource StatusTextStyle}"/>
                 </StackPanel>
             </Grid>
@@ -37,7 +37,7 @@
         <UniformGrid Grid.Row="1" Rows="1" Columns="2" Margin="0,0,0,10">
             <Border Style="{StaticResource CardBorderStyle}">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="Staff" Style="{StaticResource PanelTitleTextStyle}"/>
+                    <TextBlock DockPanel.Dock="Top" Text="{DynamicResource Staff}" Style="{StaticResource PanelTitleTextStyle}"/>
                     <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="10,30,10,10">
                         <Canvas x:Name="StaffCanvas" Width="670" Height="200"
                                 Background="Transparent"
@@ -54,7 +54,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Fretboard" Style="{StaticResource PanelTitleTextStyle}"/>
+                    <TextBlock Grid.Row="0" Text="{DynamicResource Fretboard}" Style="{StaticResource PanelTitleTextStyle}"/>
 
                     <Grid x:Name="FretboardPanel" Grid.Row="1" Visibility="Hidden" VerticalAlignment="Center">
                         <Viewbox Stretch="Uniform" Margin="10">
@@ -67,33 +67,33 @@
 
         <Border Grid.Row="2" Style="{StaticResource ModeOptionsBorderStyle}">
             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="Options" Style="{StaticResource ToolbarLabelTextStyle}"/>
-                <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show note labels"
-                          ToolTip="Show the note name beside the target on the staff"
+                <TextBlock Text="{DynamicResource Options}" Style="{StaticResource ToolbarLabelTextStyle}"/>
+                <CheckBox x:Name="ShowNoteNamesCheckBox" Content="{DynamicResource ShowLabels}"
+                          ToolTip="{DynamicResource TooltipShowLabels}"
                           Style="{StaticResource ToolbarCheckBoxStyle}"
                           IsChecked="False"
                           Checked="ShowNoteNamesCheckBox_Changed"
                           Unchecked="ShowNoteNamesCheckBox_Changed"/>
-                <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Accidental notes"
-                          ToolTip="Allow sharp and flat targets as well as natural notes"
+                <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="{DynamicResource Accidentals}"
+                          ToolTip="{DynamicResource TooltipAccidentalsTeacher}"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="IncludeAccidentalsCheckBox_Changed"
                           Unchecked="IncludeAccidentalsCheckBox_Changed"/>
-                <CheckBox x:Name="IncludeOctavesCheckBox" Content="Match octave"
-                          ToolTip="Require the played note to be in the same octave as the target"
+                <CheckBox x:Name="IncludeOctavesCheckBox" Content="{DynamicResource MatchOctave}"
+                          ToolTip="{DynamicResource TooltipOctave}"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="IncludeOctavesCheckBox_Changed"
                           Unchecked="IncludeOctavesCheckBox_Changed"/>
-                <CheckBox x:Name="RevealTargetOnMissCheckBox" Content="Reveal target on miss"
-                          ToolTip="Show the correct fret in green alongside a missed note"
+                <CheckBox x:Name="RevealTargetOnMissCheckBox" Content="{DynamicResource RevealTarget}"
+                          ToolTip="{DynamicResource TooltipReveal}"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="RevealTargetOnMissCheckBox_Changed"
                           Unchecked="RevealTargetOnMissCheckBox_Changed"/>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
-                    <Button x:Name="RandomBtn" Content="Random note" Width="124" Click="RandomBtn_Click"
+                    <Button x:Name="RandomBtn" Content="{DynamicResource RandomNote}" Width="124" Click="RandomBtn_Click"
                             Margin="0,0,8,0" Style="{StaticResource SuccessActionButtonStyle}"/>
-                    <Button x:Name="BackToModeSelectionBtn" Content="Modes" Width="104" Click="BackToModeSelectionBtn_Click"
+                    <Button x:Name="BackToModeSelectionBtn" Content="{DynamicResource Modes}" Width="104" Click="BackToModeSelectionBtn_Click"
                             Style="{StaticResource SecondaryActionButtonStyle}"/>
                 </StackPanel>
             </WrapPanel>

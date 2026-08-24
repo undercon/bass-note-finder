@@ -53,4 +53,21 @@ public class ThemeManagerTests
         Assert.Equal(new[] { AppTheme.System, AppTheme.Dark, AppTheme.Light }, choices);
         Assert.Equal(Color.FromRgb(0xEE, 0xF3, 0xF6), background);
     }
+
+    [Fact]
+    public void MainWindow_NotationPickerOffersStandardAndSolfege()
+    {
+        var choices = TestHelpers.RunOnSta(() =>
+        {
+            var window = new MainWindow(InitialViewMode.Menu, enableRuntimeServices: false);
+            var notationCombo = (ComboBox)window.FindName("NotationCombo");
+            var items = notationCombo.Items.Cast<MusicTheory.NoteDisplay.NamingConvention>().ToArray();
+            window.Close();
+            return items;
+        });
+
+        Assert.Equal(
+            new[] { MusicTheory.NoteDisplay.NamingConvention.Standard, MusicTheory.NoteDisplay.NamingConvention.Solfege },
+            choices);
+    }
 }

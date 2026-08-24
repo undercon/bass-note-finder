@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using BassNoteFinder.MusicTheory;
 
 namespace BassNoteFinder;
 
@@ -6,6 +7,8 @@ public class AppConfig
 {
     [JsonConverter(typeof(JsonStringEnumConverter<AppTheme>))]
     public AppTheme Theme { get; set; } = AppTheme.System;
+    [JsonConverter(typeof(JsonStringEnumConverter<NoteDisplay.NamingConvention>))]
+    public NoteDisplay.NamingConvention Notation { get; set; } = NoteDisplay.NamingConvention.Standard;
     public float MinSignalLevel { get; set; } = 0.01f;
     public string SelectedInputDevice { get; set; } = string.Empty;
     public bool UseHarmonicCorrection { get; set; } = true;

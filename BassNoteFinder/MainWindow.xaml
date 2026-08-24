@@ -81,6 +81,15 @@
                               SelectionChanged="ThemeCombo_SelectionChanged"
                               Style="{StaticResource DarkInputComboBoxStyle}"/>
                 </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
+                    <TextBlock Text="Notation" VerticalAlignment="Center"
+                               Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="NotationCombo" Width="106"
+                              ToolTip="Choose letter names or solfège note names"
+                              SelectionChanged="NotationCombo_SelectionChanged"
+                              Style="{StaticResource DarkInputComboBoxStyle}"/>
+                </StackPanel>
             </WrapPanel>
         </Border>
     </Grid>

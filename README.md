@@ -69,6 +69,7 @@ Student Mode also includes an available-note selector, auto-next delay controls,
 Most settings are remembered between launches, including footer controls, Teacher/Student mode options, Student available notes, adaptive-coach preference, auto-next delay, and window size/position. Adaptive performance history is session-based.
 
 The footer theme picker supports Dark, Light, and System. System follows the operating-system color palette exposed by the UI framework.
+The notation picker switches displayed note names between Standard (C, C♯, B♭) and Solfège (Do, Do♯, Si♭).
 
 ## Release Automation (GitHub Actions)
 

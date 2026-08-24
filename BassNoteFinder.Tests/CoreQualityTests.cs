@@ -28,6 +28,17 @@ public class NoteDisplayTests
         string actual = NoteDisplay.Format(new Note(midi), accidental, includeOctave);
         Assert.Equal(expected, actual);
     }
+
+    [Theory]
+    [InlineData(48, NoteDisplay.AccidentalDisplay.Natural, true, "Do3")]
+    [InlineData(49, NoteDisplay.AccidentalDisplay.Sharp, true, "Do♯3")]
+    [InlineData(49, NoteDisplay.AccidentalDisplay.Flat, true, "Re♭3")]
+    [InlineData(43, NoteDisplay.AccidentalDisplay.Natural, false, "Sol")]
+    public void Format_UsesSolfegeNotation(int midi, NoteDisplay.AccidentalDisplay accidental, bool includeOctave, string expected)
+    {
+        string actual = NoteDisplay.Format(new Note(midi), accidental, includeOctave, NoteDisplay.NamingConvention.Solfege);
+        Assert.Equal(expected, actual);
+    }
 }
 
 public class NoteMathTests

@@ -24,6 +24,7 @@ public partial class TeacherModeView : UserControl, IGameMode
     private StaffRenderer.AccidentalMode _hoverMode = StaffRenderer.AccidentalMode.Natural;
     private FretboardState _fretboardState = FretboardState.Hidden;
     private bool _loadingSettings;
+    private NoteDisplay.NamingConvention _notation = NoteDisplay.NamingConvention.Standard;
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
@@ -59,6 +60,14 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
+    public void SetNotation(NoteDisplay.NamingConvention notation)
+    {
+        _notation = notation;
+        _staff.NamingConvention = notation;
+        UpdateStatusText();
+        RerenderStaff();
+    }
+
     public void OnNoteDetected(Note note, double centsOff)
     {
         if (_currentNote == null) return;
@@ -69,7 +78,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
-            StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves)} \u2713";
+            StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves, _notation)} \u2713";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
@@ -77,7 +86,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         else
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves)}.";
+            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves, _notation)}.";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
@@ -196,6 +205,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         _staff.ShowNoteNames = settings.ShowNoteLabels;
         _staff.IncludeAccidentals = settings.IncludeAccidentals;
         _staff.IncludeOctaves = settings.MatchOctave;
+        _staff.NamingConvention = _notation;
         _loadingSettings = false;
     }
 
@@ -220,7 +230,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             if (ShowNoteNamesCheckBox.IsChecked == true)
             {
-                StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
+                StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation)}";
                 StatusText.FontSize = 16;
                 StatusText.FontWeight = FontWeights.Bold;
                 StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
@@ -322,7 +332,7 @@ public partial class TeacherModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
+                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation);
                     OverlayIcon.FontSize = 36;
                     OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";

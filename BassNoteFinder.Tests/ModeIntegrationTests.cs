@@ -196,6 +196,21 @@ public class ModeIntegrationTests
     }
 
     [Fact]
+    public void StudentMode_SetNotation_UpdatesAvailableNoteNames()
+    {
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView();
+            view.SetNotation(NoteDisplay.NamingConvention.Solfege);
+
+            Assert.Equal("Do", ((CheckBox)view.FindName("NoteCCheckBox")).Content);
+            Assert.Equal("Do♯", ((CheckBox)view.FindName("NoteCsCheckBox")).Content);
+            Assert.Equal("Si", ((CheckBox)view.FindName("NoteBCheckBox")).Content);
+            return 0;
+        });
+    }
+
+    [Fact]
     public void StudentMode_AdaptiveCoachToggle_RaisesSettingsChanged()
     {
         bool? adaptivePractice = null;

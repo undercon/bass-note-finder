@@ -25,6 +25,7 @@ public partial class StudentModeView : UserControl, IGameMode
     private long _targetStartedTimestamp;
     private int _mistakesOnCurrentTarget;
     private bool _targetResultRecorded = true;
+    private NoteDisplay.NamingConvention _notation = NoteDisplay.NamingConvention.Standard;
 
     public event Action? BackToMenuRequested;
     public event Action<bool>? IncludeOctavesChanged;
@@ -60,13 +61,22 @@ public partial class StudentModeView : UserControl, IGameMode
         SyncNextNoteDelayUi();
     }
 
+    public void SetNotation(NoteDisplay.NamingConvention notation)
+    {
+        _notation = notation;
+        _staff.NamingConvention = notation;
+        UpdateAvailableNoteNames();
+        UpdateStatusText();
+        RerenderStaff();
+    }
+
     public void OnNoteDetected(Note note, double centsOff)
     {
         if (_currentNote == null) return;
         Note target = _currentNote.Value;
         bool includeOctave = IncludeOctavesCheckBox.IsChecked == true;
         Note evaluatedNote = EvaluateDetectedNoteAgainstTarget(note, target, includeOctave);
-        string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave);
+        string playedDisplay = NoteDisplay.Format(note, ToDisplayAccidental(_currentMode), includeOctave, _notation);
 
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
@@ -284,7 +294,7 @@ public partial class StudentModeView : UserControl, IGameMode
 
         if (ShowNoteNamesCheckBox.IsChecked == true)
         {
-            StatusText.Text = $"Play: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true)}";
+            StatusText.Text = $"Play: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation)}";
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
@@ -327,7 +337,7 @@ public partial class StudentModeView : UserControl, IGameMode
                 FretboardPanel.Visibility = Visibility.Visible;
                 if (studentNote.HasValue)
                 {
-                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true);
+                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation);
                     OverlayIcon.FontSize = 36;
                     OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
                     OverlayText.Text = "Correct!";
@@ -384,6 +394,7 @@ public partial class StudentModeView : UserControl, IGameMode
         _staff.ShowNoteNames = settings.ShowNoteLabels;
         _staff.IncludeAccidentals = settings.IncludeAccidentals;
         _staff.IncludeOctaves = settings.MatchOctave;
+        _staff.NamingConvention = _notation;
         _loadingSettings = false;
         SyncNextNoteDelayUi();
         SyncAvailableNoteCheckBoxStates();
@@ -494,6 +505,18 @@ public partial class StudentModeView : UserControl, IGameMode
         yield return NoteACheckBox;
         yield return NoteAsCheckBox;
         yield return NoteBCheckBox;
+    }
+
+    private void UpdateAvailableNoteNames()
+    {
+        foreach (CheckBox checkBox in GetAvailableNoteCheckBoxes())
+        {
+            int pitchClass = int.Parse(checkBox.Tag?.ToString() ?? "0");
+            NoteDisplay.AccidentalDisplay accidental = IsNaturalPitchClass(pitchClass)
+                ? NoteDisplay.AccidentalDisplay.Natural
+                : NoteDisplay.AccidentalDisplay.Sharp;
+            checkBox.Content = NoteDisplay.Format(new Note(pitchClass), accidental, includeOctave: false, _notation);
+        }
     }
 
     private void SyncAvailableNoteCheckBoxStates()

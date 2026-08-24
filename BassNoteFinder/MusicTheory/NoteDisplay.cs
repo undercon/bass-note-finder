@@ -6,6 +6,14 @@ public static class NoteDisplay
 
     private static readonly string[] SharpNames = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
     private static readonly string[] FlatNames = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+    private static readonly string[] SolfegeSharpNames = { "Do", "Do♯", "Re", "Re♯", "Mi", "Fa", "Fa♯", "Sol", "Sol♯", "La", "La♯", "Si" };
+    private static readonly string[] SolfegeFlatNames = { "Do", "Re♭", "Re", "Mi♭", "Mi", "Fa", "Sol♭", "Sol", "La♭", "La", "Si♭", "Si" };
+
+    public enum NamingConvention
+    {
+        Standard,
+        Solfege
+    }
 
     public enum AccidentalDisplay
     {
@@ -20,10 +28,20 @@ public static class NoteDisplay
 
     public static Note ToWritten(Note sounding) => new(ToWrittenMidi(sounding.MidiNote));
 
-    public static string Format(Note soundingNote, AccidentalDisplay accidental, bool includeOctave)
+    public static string Format(
+        Note soundingNote,
+        AccidentalDisplay accidental,
+        bool includeOctave,
+        NamingConvention namingConvention = NamingConvention.Standard)
     {
         int pitchClass = (soundingNote.MidiNote % 12 + 12) % 12;
-        string baseName = accidental switch
+        string baseName = namingConvention == NamingConvention.Solfege
+            ? accidental switch
+            {
+                AccidentalDisplay.Flat => SolfegeFlatNames[pitchClass],
+                _ => SolfegeSharpNames[pitchClass]
+            }
+            : accidental switch
         {
             AccidentalDisplay.Flat => FlatNames[pitchClass],
             AccidentalDisplay.Sharp => SharpNames[pitchClass],

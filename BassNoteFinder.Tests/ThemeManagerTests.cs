@@ -70,4 +70,24 @@ public class ThemeManagerTests
             new[] { "Standard", "Solfège" },
             choices);
     }
+
+    [Fact]
+    public void MainWindow_LanguagePickerOffersGreekAndKeepsTheSelectedLanguage()
+    {
+        string[] choices = TestHelpers.RunOnSta(() =>
+        {
+            var window = new MainWindow(InitialViewMode.Menu, enableRuntimeServices: false);
+            var languageCombo = (ComboBox)window.FindName("LanguageCombo");
+            var items = languageCombo.Items.Cast<object>().ToArray();
+
+            languageCombo.SelectedItem = items.Single(item => item.ToString() == "Ελληνικά");
+            string[] names = items.Select(item => item.ToString()!).ToArray();
+
+            Assert.Equal("Ελληνικά", languageCombo.SelectedItem?.ToString());
+            window.Close();
+            return names;
+        });
+
+        Assert.Equal(new[] { "System", "English", "Ελληνικά" }, choices);
+    }
 }

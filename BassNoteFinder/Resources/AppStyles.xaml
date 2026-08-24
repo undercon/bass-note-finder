@@ -26,6 +26,8 @@
     <SolidColorBrush x:Key="WarmAccentBrush" Color="#F0BE67"/>
     <SolidColorBrush x:Key="CorrectBrush" Color="#32CD32"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#FF4500"/>
+    <SolidColorBrush x:Key="CorrectFeedbackBackgroundBrush" Color="#173D27"/>
+    <SolidColorBrush x:Key="ErrorFeedbackBackgroundBrush" Color="#4B201D"/>
     <LinearGradientBrush x:Key="FretboardWoodBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#241208" Offset="0"/>
         <GradientStop Color="#5C3118" Offset="0.35"/>

@@ -79,7 +79,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves, _notation)} \u2713";
-            StatusText.FontSize = 16;
+            StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
         }
@@ -87,7 +87,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
             StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves, _notation)}.";
-            StatusText.FontSize = 16;
+            StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
         }
@@ -195,12 +195,18 @@ public partial class TeacherModeView : UserControl, IGameMode
         RerenderStaff();
     }
 
+    private void RevealTargetOnMissCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        NotifySettingsChanged();
+    }
+
     private void ApplySettings(TeacherModeSettings settings)
     {
         _loadingSettings = true;
         ShowNoteNamesCheckBox.IsChecked = settings.ShowNoteLabels;
         IncludeAccidentalsCheckBox.IsChecked = settings.IncludeAccidentals;
         IncludeOctavesCheckBox.IsChecked = settings.MatchOctave;
+        RevealTargetOnMissCheckBox.IsChecked = settings.RevealTargetOnMiss;
 
         _staff.ShowNoteNames = settings.ShowNoteLabels;
         _staff.IncludeAccidentals = settings.IncludeAccidentals;
@@ -220,7 +226,8 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             ShowNoteLabels = ShowNoteNamesCheckBox.IsChecked == true,
             IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true,
-            MatchOctave = IncludeOctavesCheckBox.IsChecked == true
+            MatchOctave = IncludeOctavesCheckBox.IsChecked == true,
+            RevealTargetOnMiss = RevealTargetOnMissCheckBox.IsChecked == true
         });
     }
 
@@ -307,50 +314,74 @@ public partial class TeacherModeView : UserControl, IGameMode
         switch (state)
         {
             case FretboardState.Hidden:
-                FretboardPanel.Visibility = Visibility.Visible;
-                OverlayPanel.Visibility = Visibility.Visible;
+                SetFeedbackVisual(null);
                 _fretboardRenderer.Render(FretboardCanvas);
-                OverlayIcon.Text = "?";
-                OverlayIcon.FontSize = 48;
-                OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryBrush");
-                OverlayText.Text = "Play the note to reveal";
-                OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "SubtleTextBrush");
                 break;
 
             case FretboardState.FlashingWrong:
-                OverlayPanel.Visibility = Visibility.Hidden;
-                FretboardPanel.Visibility = Visibility.Visible;
-                if (studentNote.HasValue)
+                SetFeedbackVisual(false);
+                if (studentNote.HasValue && _currentNote.HasValue)
                 {
-                    _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
-                        Color.FromRgb(0xFF, 0x32, 0x32));
+                    if (RevealTargetOnMissCheckBox.IsChecked == true)
+                    {
+                        _fretboardRenderer.RenderComparison(
+                            FretboardCanvas,
+                            _currentNote.Value,
+                            GetBrushColor("CorrectBrush", Colors.LimeGreen),
+                            studentNote.Value,
+                            GetBrushColor("ErrorBrush", Colors.OrangeRed),
+                            _currentNote);
+                    }
+                    else
+                    {
+                        _fretboardRenderer.Render(
+                            FretboardCanvas,
+                            studentNote.Value,
+                            GetBrushColor("ErrorBrush", Colors.OrangeRed),
+                            _currentNote);
+                    }
                 }
                 break;
 
             case FretboardState.CelebratingCorrect:
-                OverlayPanel.Visibility = Visibility.Visible;
-                FretboardPanel.Visibility = Visibility.Visible;
+                SetFeedbackVisual(true);
                 if (studentNote.HasValue)
                 {
-                    OverlayIcon.Text = NoteDisplay.Format(studentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation);
-                    OverlayIcon.FontSize = 36;
-                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
-                    OverlayText.Text = "Correct!";
-                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
-                    _fretboardRenderer.Render(FretboardCanvas, studentNote.Value,
-                        Color.FromRgb(0xFF, 0x32, 0x32));
-                }
-                else
-                {
-                    OverlayIcon.Text = "\u2713";
-                    OverlayIcon.FontSize = 48;
-                    OverlayIcon.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
-                    OverlayText.Text = "Correct!";
-                    OverlayText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
+                    _fretboardRenderer.Render(
+                        FretboardCanvas,
+                        studentNote.Value,
+                        GetBrushColor("CorrectBrush", Colors.LimeGreen),
+                        _currentNote);
                 }
                 break;
         }
+
+        FretboardPanel.Visibility = Visibility.Visible;
     }
+
+    private void SetFeedbackVisual(bool? isCorrect)
+    {
+        if (!isCorrect.HasValue)
+        {
+            FeedbackIcon.Visibility = Visibility.Collapsed;
+            FeedbackBorder.SetResourceReference(Border.BackgroundProperty, "PanelBackgroundBrush");
+            FeedbackBorder.SetResourceReference(Border.BorderBrushProperty, "ModeHeaderBorderBrush");
+            FeedbackBorder.BorderThickness = new Thickness(1);
+            return;
+        }
+
+        FeedbackIcon.Visibility = Visibility.Visible;
+        FeedbackIcon.Text = isCorrect.Value ? "✓" : "×";
+        FeedbackIcon.SetResourceReference(TextBlock.ForegroundProperty, isCorrect.Value ? "CorrectBrush" : "ErrorBrush");
+        FeedbackBorder.SetResourceReference(
+            Border.BackgroundProperty,
+            isCorrect.Value ? "CorrectFeedbackBackgroundBrush" : "ErrorFeedbackBackgroundBrush");
+        FeedbackBorder.SetResourceReference(Border.BorderBrushProperty, isCorrect.Value ? "CorrectBrush" : "ErrorBrush");
+        FeedbackBorder.BorderThickness = new Thickness(2);
+    }
+
+    private Color GetBrushColor(string resourceKey, Color fallback) =>
+        TryFindResource(resourceKey) is SolidColorBrush brush ? brush.Color : fallback;
 
     private void FlashTimer_Tick(object? sender, EventArgs e)
     {

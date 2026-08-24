@@ -27,6 +27,17 @@ public class ModeIntegrationTests
     }
 
     [Fact]
+    public void StudentMode_DefaultsToMatchingTheOctave()
+    {
+        RunOnSta(() =>
+        {
+            var view = new StudentModeView();
+            Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            return 0;
+        });
+    }
+
+    [Fact]
     public void TeacherMode_WhenOctavesOff_StatusOmitsOctaveNumber()
     {
         string status = RunOnSta(() =>
@@ -84,6 +95,7 @@ public class ModeIntegrationTests
         {
             var view = new StudentModeView();
             view.IncludeOctavesChanged += value => eventValue = value;
+            SetIncludeOctaves(view, false);
             SetIncludeOctaves(view, true);
             return 0;
         });
@@ -137,12 +149,14 @@ public class ModeIntegrationTests
             {
                 ShowNoteLabels = true,
                 IncludeAccidentals = true,
-                MatchOctave = true
+                MatchOctave = true,
+                RevealTargetOnMiss = true
             });
 
             Assert.True(((CheckBox)view.FindName("ShowNoteNamesCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("RevealTargetOnMissCheckBox")).IsChecked);
             return 0;
         });
     }
@@ -157,6 +171,7 @@ public class ModeIntegrationTests
                 ShowNoteLabels = true,
                 IncludeAccidentals = true,
                 MatchOctave = true,
+                RevealTargetOnMiss = true,
                 AdaptivePractice = true,
                 AutoAdvance = false,
                 NextNoteDelaySeconds = 7,
@@ -166,6 +181,7 @@ public class ModeIntegrationTests
             Assert.True(((CheckBox)view.FindName("ShowNoteNamesCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
+            Assert.True(((CheckBox)view.FindName("RevealTargetOnMissCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked);
             Assert.False(((CheckBox)view.FindName("AutoAdvanceCheckBox")).IsChecked);
             Assert.Equal(7, ((Slider)view.FindName("NextNoteDelaySlider")).Value);

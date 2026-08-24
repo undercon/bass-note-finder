@@ -27,10 +27,16 @@ public class TeacherModeSettings
     public bool ShowNoteLabels { get; set; }
     public bool IncludeAccidentals { get; set; }
     public bool MatchOctave { get; set; }
+    public bool RevealTargetOnMiss { get; set; }
 }
 
 public class StudentModeSettings : TeacherModeSettings
 {
+    public StudentModeSettings()
+    {
+        MatchOctave = true;
+    }
+
     public bool AdaptivePractice { get; set; }
     public bool AutoAdvance { get; set; } = true;
     public double NextNoteDelaySeconds { get; set; } = 3;

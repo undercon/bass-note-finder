@@ -21,11 +21,11 @@
         </Border>
 
         <StackPanel Width="680">
-            <TextBlock Text="BASS PRACTICE" Style="{StaticResource EyebrowTextStyle}"
+            <TextBlock Text="{DynamicResource MenuEyebrow}" Style="{StaticResource EyebrowTextStyle}"
                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
-            <TextBlock Text="Bass Note Finder" Style="{StaticResource PageTitleTextStyle}"
+            <TextBlock Text="{DynamicResource AppTitle}" Style="{StaticResource PageTitleTextStyle}"
                        HorizontalAlignment="Center" Margin="0,0,0,8"/>
-            <TextBlock Text="Build confident note recognition, one clean note at a time."
+            <TextBlock Text="{DynamicResource MenuTagline}"
                        FontSize="15" Foreground="{DynamicResource MutedTextBrush}"
                        HorizontalAlignment="Center" Margin="0,0,0,28"/>
 
@@ -41,13 +41,13 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
-                            <TextBlock Text="01 · GUIDE" Style="{StaticResource EyebrowTextStyle}"/>
-                            <TextBlock Text="Teacher Mode" FontSize="22" FontWeight="SemiBold"
+                            <TextBlock Text="{DynamicResource Guide}" Style="{StaticResource EyebrowTextStyle}"/>
+                            <TextBlock Text="{DynamicResource TeacherMode}" FontSize="22" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PanelHeaderBrush}" Margin="0,7,0,0"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="Place a target on the staff, then find it on your bass."
+                        <TextBlock Grid.Row="1" Text="{DynamicResource TeacherDescription}"
                                    Margin="0,12,0,16" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
-                        <Button Grid.Row="2" Content="Choose Teacher Mode"
+                        <Button Grid.Row="2" Content="{DynamicResource ChooseTeacher}"
                                 Click="TeacherModeButton_Click"
                                 Style="{StaticResource PrimaryActionButtonStyle}"/>
                     </Grid>
@@ -64,14 +64,14 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0">
-                            <TextBlock Text="02 · TRAIN" Style="{StaticResource EyebrowTextStyle}"
+                            <TextBlock Text="{DynamicResource Train}" Style="{StaticResource EyebrowTextStyle}"
                                        Foreground="{DynamicResource WarmAccentBrush}"/>
-                            <TextBlock Text="Student Mode" FontSize="22" FontWeight="SemiBold"
+                            <TextBlock Text="{DynamicResource StudentMode}" FontSize="22" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PanelHeaderBrush}" Margin="0,7,0,0"/>
                         </StackPanel>
-                        <TextBlock Grid.Row="1" Text="Get a random target and build fast, accurate recognition."
+                        <TextBlock Grid.Row="1" Text="{DynamicResource StudentDescription}"
                                    Margin="0,12,0,16" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" FontSize="14"/>
-                        <Button Grid.Row="2" Content="Start Student Mode"
+                        <Button Grid.Row="2" Content="{DynamicResource StartStudent}"
                                 Click="StudentModeButton_Click"
                                 Style="{StaticResource SuccessActionButtonStyle}"/>
                     </Grid>

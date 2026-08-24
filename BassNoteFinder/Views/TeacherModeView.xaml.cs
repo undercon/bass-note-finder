@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using BassNoteFinder.Gameplay;
+using BassNoteFinder.Localization;
 using BassNoteFinder.MusicTheory;
 using BassNoteFinder.Rendering;
 
@@ -78,7 +79,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
             SetFretboardState(FretboardState.CelebratingCorrect, target);
-            StatusText.Text = $"Correct! That was {NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves, _notation)} \u2713";
+            StatusText.Text = string.Format(Text("CorrectTeacher"), NoteDisplay.Format(target, ToDisplayAccidental(_currentMode), includeOctaves, _notation));
             StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "CorrectBrush");
@@ -86,7 +87,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         else
         {
             SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves, _notation)}.";
+            StatusText.Text = string.Format(Text("NotQuite"), NoteDisplay.Format(note, NoteDisplay.AccidentalDisplay.Natural, includeOctaves, _notation));
             StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
@@ -237,14 +238,14 @@ public partial class TeacherModeView : UserControl, IGameMode
         {
             if (ShowNoteNamesCheckBox.IsChecked == true)
             {
-                StatusText.Text = $"Looking for: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation)}";
+                StatusText.Text = string.Format(Text("LookingFor"), NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation));
                 StatusText.FontSize = 16;
                 StatusText.FontWeight = FontWeights.Bold;
                 StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
             }
             else
             {
-                StatusText.Text = "Find this note on your bass.";
+                StatusText.Text = Text("FindOnBass");
                 StatusText.FontSize = 14;
                 StatusText.FontWeight = FontWeights.Normal;
                 StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
@@ -252,7 +253,7 @@ public partial class TeacherModeView : UserControl, IGameMode
         }
         else
         {
-            StatusText.Text = "Click the staff to place a note, or press Random.";
+            StatusText.Text = Text("TeacherStart");
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
@@ -397,6 +398,8 @@ public partial class TeacherModeView : UserControl, IGameMode
             _ => NoteDisplay.AccidentalDisplay.Natural
         };
     }
+
+    private string Text(string key) => LocalizationManager.GetString(key);
 
     private static Note EvaluateDetectedNoteAgainstTarget(Note detected, Note target, bool includeOctaves)
     {

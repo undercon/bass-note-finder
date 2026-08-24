@@ -146,49 +146,17 @@ public class FooterControlsE2ETests
     }
 
     [Fact]
-    public void HarmonicCorrectionCheckBox_MatchesPipelineSetting()
+    public void HarmonicCorrection_IsAlwaysEnabled()
     {
         TestHelpers.RunOnSta(() =>
         {
             var w = CreateWindow();
-            var cb = (CheckBox)w.FindName("HarmonicCorrectionCheckBox");
             var pipeline = TestHelpers.GetPrivateField<StableNoteDetectionPipeline>(w, "_detectionPipeline");
 
             Assert.NotNull(pipeline);
-            Assert.Equal(cb.IsChecked == true, pipeline!.UseHarmonicCorrection);
+            Assert.True(pipeline!.UseHarmonicCorrection);
             return 0;
         });
-    }
-
-    [Fact]
-    public void HarmonicCorrectionCheckBox_WhenUnchecked_PipelineReflectsChange()
-    {
-        bool? pipelineValue = TestHelpers.RunOnSta(() =>
-        {
-            var w = CreateWindow();
-            var cb = (CheckBox)w.FindName("HarmonicCorrectionCheckBox");
-            cb.IsChecked = false;
-            var pipeline = TestHelpers.GetPrivateField<StableNoteDetectionPipeline>(w, "_detectionPipeline");
-            return pipeline?.UseHarmonicCorrection;
-        });
-
-        Assert.False(pipelineValue);
-    }
-
-    [Fact]
-    public void HarmonicCorrectionCheckBox_WhenRechecked_PipelineReflectsChange()
-    {
-        bool? pipelineValue = TestHelpers.RunOnSta(() =>
-        {
-            var w = CreateWindow();
-            var cb = (CheckBox)w.FindName("HarmonicCorrectionCheckBox");
-            cb.IsChecked = false;
-            cb.IsChecked = true;
-            var pipeline = TestHelpers.GetPrivateField<StableNoteDetectionPipeline>(w, "_detectionPipeline");
-            return pipeline?.UseHarmonicCorrection;
-        });
-
-        Assert.True(pipelineValue);
     }
 
     [Fact]

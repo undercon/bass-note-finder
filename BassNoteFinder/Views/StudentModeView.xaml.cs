@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using BassNoteFinder.Gameplay;
+using BassNoteFinder.Localization;
 using BassNoteFinder.MusicTheory;
 using BassNoteFinder.Rendering;
 
@@ -84,15 +85,15 @@ public partial class StudentModeView : UserControl, IGameMode
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             if (IsAutoAdvanceEnabled)
             {
-                int seconds = (int)Math.Round(NextNoteDelaySlider.Value);
-                StatusText.Text = $"Correct! You played {playedDisplay}. Next note in {seconds}s...";
+                double seconds = NextNoteDelaySlider.Value;
+                StatusText.Text = string.Format(Text("CorrectStudentNext"), playedDisplay, FormatDelay(seconds));
                 _nextNoteTimer.Interval = TimeSpan.FromSeconds(seconds);
                 _nextNoteTimer.Stop();
                 _nextNoteTimer.Start();
             }
             else
             {
-                StatusText.Text = $"Correct! You played {playedDisplay}.";
+                StatusText.Text = string.Format(Text("CorrectStudent"), playedDisplay);
                 _nextNoteTimer.Stop();
             }
             StatusText.FontSize = 20;
@@ -106,7 +107,7 @@ public partial class StudentModeView : UserControl, IGameMode
                 _mistakesOnCurrentTarget++;
             }
             SetFretboardState(FretboardState.FlashingWrong, note);
-            StatusText.Text = $"Not quite. You played {playedDisplay}.";
+            StatusText.Text = string.Format(Text("NotQuite"), playedDisplay);
             StatusText.FontSize = 20;
             StatusText.FontWeight = FontWeights.SemiBold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "ErrorBrush");
@@ -290,7 +291,7 @@ public partial class StudentModeView : UserControl, IGameMode
     {
         if (!_currentNote.HasValue)
         {
-            StatusText.Text = "Play the shown note.";
+            StatusText.Text = Text("StudentStart");
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
@@ -299,14 +300,14 @@ public partial class StudentModeView : UserControl, IGameMode
 
         if (ShowNoteNamesCheckBox.IsChecked == true)
         {
-            StatusText.Text = $"Play: {NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation)}";
+            StatusText.Text = string.Format(Text("PlayNamed"), NoteDisplay.Format(_currentNote.Value, ToDisplayAccidental(_currentMode), IncludeOctavesCheckBox.IsChecked == true, _notation));
             StatusText.FontSize = 16;
             StatusText.FontWeight = FontWeights.Bold;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
         }
         else
         {
-            StatusText.Text = "Play this note on your bass.";
+            StatusText.Text = Text("PlayThisNote");
             StatusText.FontSize = 14;
             StatusText.FontWeight = FontWeights.Normal;
             StatusText.SetResourceReference(TextBlock.ForegroundProperty, "MutedTextBrush");
@@ -403,13 +404,14 @@ public partial class StudentModeView : UserControl, IGameMode
             return;
         }
 
-        int seconds = (int)Math.Round(NextNoteDelaySlider.Value);
-        NextNoteDelayValueText.Text = $"{seconds}s";
+        NextNoteDelayValueText.Text = $"{FormatDelay(NextNoteDelaySlider.Value)}s";
         NextNoteDelaySlider.IsEnabled = IsAutoAdvanceEnabled;
         NextNoteDelayValueText.SetResourceReference(
             TextBlock.ForegroundProperty,
             IsAutoAdvanceEnabled ? "PanelHeaderBrush" : "SubtleTextBrush");
     }
+
+    private static string FormatDelay(double seconds) => seconds.ToString("0.#");
 
     private void ApplySettings(StudentModeSettings settings)
     {
@@ -576,6 +578,8 @@ public partial class StudentModeView : UserControl, IGameMode
             _ => NoteDisplay.AccidentalDisplay.Natural
         };
     }
+
+    private string Text(string key) => LocalizationManager.GetString(key);
 
     private static Note EvaluateDetectedNoteAgainstTarget(Note detected, Note target, bool includeOctaves)
     {

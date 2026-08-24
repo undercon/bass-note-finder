@@ -29,6 +29,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
                     <TextBlock Text="Input" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <ComboBox x:Name="InputCombo" Width="250"
+                              ToolTip="Choose the microphone or audio interface used for note detection"
                               SelectionChanged="InputCombo_SelectionChanged"
                               Style="{StaticResource DarkInputComboBoxStyle}"/>
                 </StackPanel>
@@ -36,6 +37,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,4,6,4">
                     <TextBlock Text="Gate" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <Slider x:Name="ThresholdSlider" Width="125" Minimum="0.005" Maximum="0.02"
+                            ToolTip="Minimum input level required before the app listens for a note"
                             SmallChange="0.001" LargeChange="0.002"
                             TickFrequency="0.001" IsSnapToTickEnabled="False"
                             ValueChanged="ThresholdSlider_ValueChanged"/>
@@ -44,11 +46,13 @@
                 </StackPanel>
 
                 <CheckBox x:Name="HarmonicCorrectionCheckBox" Content="Bass Harmonics"
+                          ToolTip="Correct common octave errors caused by strong bass harmonics"
                           Style="{StaticResource ToolbarCheckBoxStyle}"
                           Checked="HarmonicCorrectionCheckBox_Changed"
                           Unchecked="HarmonicCorrectionCheckBox_Changed"/>
 
                 <Button x:Name="ToggleMicBtn" Content="Start Mic"
+                        ToolTip="Start or stop listening through the selected input"
                         Width="112" Click="ToggleMic_Click" Margin="10,4"
                         Style="{StaticResource PrimaryActionButtonStyle}"/>
 
@@ -64,6 +68,7 @@
                 </Border>
 
                 <CheckBox x:Name="ShowDeviationCheckBox" Content="Deviation"
+                          ToolTip="Show how many cents sharp or flat the detected note is"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="ShowDeviationCheckBox_Changed"
                           Unchecked="ShowDeviationCheckBox_Changed"/>
@@ -72,6 +77,7 @@
                     <TextBlock Text="Theme" VerticalAlignment="Center"
                                Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                     <ComboBox x:Name="ThemeCombo" Width="96"
+                              ToolTip="Choose the app appearance, or follow the system palette"
                               SelectionChanged="ThemeCombo_SelectionChanged"
                               Style="{StaticResource DarkInputComboBoxStyle}"/>
                 </StackPanel>

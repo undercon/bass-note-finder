@@ -69,15 +69,18 @@
             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="Options" Style="{StaticResource ToolbarLabelTextStyle}"/>
                 <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show note labels"
+                          ToolTip="Show the note name beside the target on the staff"
                           Style="{StaticResource ToolbarCheckBoxStyle}"
                           IsChecked="False"
                           Checked="ShowNoteNamesCheckBox_Changed"
                           Unchecked="ShowNoteNamesCheckBox_Changed"/>
                 <CheckBox x:Name="IncludeAccidentalsCheckBox" Content="Accidental notes"
+                          ToolTip="Allow sharp and flat targets as well as natural notes"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="IncludeAccidentalsCheckBox_Changed"
                           Unchecked="IncludeAccidentalsCheckBox_Changed"/>
                 <CheckBox x:Name="IncludeOctavesCheckBox" Content="Match octave"
+                          ToolTip="Require the played note to be in the same octave as the target"
                           Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                           Checked="IncludeOctavesCheckBox_Changed"
                           Unchecked="IncludeOctavesCheckBox_Changed"/>

@@ -23,14 +23,8 @@ public class TeacherModeE2ETests
     private static Color StatusForegroundColor(TeacherModeView view) =>
         ((SolidColorBrush)((TextBlock)view.FindName("StatusText")).Foreground).Color;
 
-    private static string OverlayIconText(TeacherModeView view) =>
-        ((TextBlock)view.FindName("OverlayIcon")).Text;
-
-    private static string OverlayBodyText(TeacherModeView view) =>
-        ((TextBlock)view.FindName("OverlayText")).Text;
-
-    private static Visibility OverlayPanelVisibility(TeacherModeView view) =>
-        ((FrameworkElement)view.FindName("OverlayPanel")).Visibility;
+    private static string FeedbackIconText(TeacherModeView view) =>
+        ((TextBlock)view.FindName("FeedbackIcon")).Text;
 
     [Fact]
     public void OnActivate_StatusShowsPlacementInstruction()
@@ -45,30 +39,6 @@ public class TeacherModeE2ETests
     }
 
     [Fact]
-    public void OnActivate_OverlayShowsQuestionMark()
-    {
-        string icon = TestHelpers.RunOnSta(() =>
-        {
-            var view = CreateActivated();
-            return OverlayIconText(view);
-        });
-
-        Assert.Equal("?", icon);
-    }
-
-    [Fact]
-    public void OnActivate_OverlayTextShowsRevealHint()
-    {
-        string body = TestHelpers.RunOnSta(() =>
-        {
-            var view = CreateActivated();
-            return OverlayBodyText(view);
-        });
-
-        Assert.Equal("Play the note to reveal", body);
-    }
-
-    [Fact]
     public void AfterSelectNote_StatusShowsFindInstruction()
     {
         string status = TestHelpers.RunOnSta(() =>
@@ -79,19 +49,6 @@ public class TeacherModeE2ETests
         });
 
         Assert.Equal("Find this note on your bass.", status);
-    }
-
-    [Fact]
-    public void AfterSelectNote_OverlayStillShowsQuestionMark()
-    {
-        string icon = TestHelpers.RunOnSta(() =>
-        {
-            var view = new TeacherModeView();
-            TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
-            return OverlayIconText(view);
-        });
-
-        Assert.Equal("?", icon);
     }
 
     [Fact]
@@ -136,31 +93,17 @@ public class TeacherModeE2ETests
     }
 
     [Fact]
-    public void CorrectNote_OverlayTextShowsCorrect()
+    public void CorrectNote_FeedbackBannerShowsCheckMark()
     {
-        string body = TestHelpers.RunOnSta(() =>
+        string icon = TestHelpers.RunOnSta(() =>
         {
             var view = new TeacherModeView();
             TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
             view.OnNoteDetected(new Note(43), 0);
-            return OverlayBodyText(view);
+            return FeedbackIconText(view);
         });
 
-        Assert.Equal("Correct!", body);
-    }
-
-    [Fact]
-    public void CorrectNote_OverlayPanelRemainsVisible()
-    {
-        Visibility vis = TestHelpers.RunOnSta(() =>
-        {
-            var view = new TeacherModeView();
-            TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
-            view.OnNoteDetected(new Note(43), 0);
-            return OverlayPanelVisibility(view);
-        });
-
-        Assert.Equal(Visibility.Visible, vis);
+        Assert.Equal("✓", icon);
     }
 
     [Fact]
@@ -189,20 +132,6 @@ public class TeacherModeE2ETests
         });
 
         Assert.Equal(Colors.OrangeRed, color);
-    }
-
-    [Fact]
-    public void WrongNote_OverlayPanelIsHidden()
-    {
-        Visibility vis = TestHelpers.RunOnSta(() =>
-        {
-            var view = new TeacherModeView();
-            TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
-            view.OnNoteDetected(new Note(40), 0);
-            return OverlayPanelVisibility(view);
-        });
-
-        Assert.Equal(Visibility.Hidden, vis);
     }
 
     [Fact]
@@ -261,8 +190,8 @@ public class StudentModeE2ETests
     private static Color StatusForegroundColor(StudentModeView view) =>
         ((SolidColorBrush)((TextBlock)view.FindName("StatusText")).Foreground).Color;
 
-    private static string OverlayBodyText(StudentModeView view) =>
-        ((TextBlock)view.FindName("OverlayText")).Text;
+    private static string FeedbackIconText(StudentModeView view) =>
+        ((TextBlock)view.FindName("FeedbackIcon")).Text;
 
     [Fact]
     public void OnActivate_AutoPicksANote_StatusShowsPlayInstruction()
@@ -336,20 +265,17 @@ public class StudentModeE2ETests
     }
 
     [Fact]
-    public void CorrectNote_OverlayTextShowsCorrect()
+    public void CorrectNote_FeedbackBannerShowsCheckMark()
     {
-        string body = TestHelpers.RunOnSta(() =>
+        string icon = TestHelpers.RunOnSta(() =>
         {
             var view = new StudentModeView();
-            view.OnActivate();
-
-            Note? current = TestHelpers.GetPrivateField<Note?>(view, "_currentNote");
-            Assert.NotNull(current);
-            view.OnNoteDetected(current!.Value, 0);
-            return OverlayBodyText(view);
+            TestHelpers.InvokeSelectNote(view, new Note(43), StaffRenderer.AccidentalMode.Natural);
+            view.OnNoteDetected(new Note(43), 0);
+            return FeedbackIconText(view);
         });
 
-        Assert.Equal("Correct!", body);
+        Assert.Equal("✓", icon);
     }
 
     [Fact]

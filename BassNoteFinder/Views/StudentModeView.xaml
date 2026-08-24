@@ -18,12 +18,20 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Style="{StaticResource ModeHeaderBorderStyle}">
-            <StackPanel>
-                <TextBlock Text="STUDENT MODE · HEAR, FIND, PLAY" Style="{StaticResource EyebrowTextStyle}"/>
-                <TextBlock x:Name="StatusText" Text="Play the shown note."
-                           Style="{StaticResource StatusTextStyle}"/>
-            </StackPanel>
+        <Border x:Name="FeedbackBorder" Grid.Row="0" Height="76" Style="{StaticResource ModeHeaderBorderStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="FeedbackIcon" Visibility="Collapsed" FontSize="30" FontWeight="Bold"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="STUDENT MODE · HEAR, FIND, PLAY" Style="{StaticResource EyebrowTextStyle}"/>
+                    <TextBlock x:Name="StatusText" Text="Play the shown note."
+                               Style="{StaticResource StatusTextStyle}"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <UniformGrid Grid.Row="1" Rows="1" Columns="2" Margin="0,0,0,10">
@@ -39,22 +47,14 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Text="Fretboard" Style="{StaticResource PanelTitleTextStyle}"/>
 
-                    <StackPanel x:Name="OverlayPanel" Grid.Row="1" HorizontalAlignment="Center" Margin="0,8,0,10">
-                        <TextBlock x:Name="OverlayIcon" Text="?" FontSize="48" Foreground="{DynamicResource SecondaryBrush}"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="OverlayText" Text="Play the note to reveal" FontSize="12" Foreground="{DynamicResource SubtleTextBrush}"
-                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                    </StackPanel>
-
-                    <Grid x:Name="FretboardPanel" Grid.Row="2" Visibility="Hidden" VerticalAlignment="Center">
-                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" Margin="10">
-                            <Canvas x:Name="FretboardCanvas" Width="670" Height="200" Background="{DynamicResource FretboardWoodBrush}"/>
+                    <Grid x:Name="FretboardPanel" Grid.Row="1" Visibility="Hidden" VerticalAlignment="Center">
+                        <Viewbox Stretch="Uniform" Margin="10">
+                            <Canvas x:Name="FretboardCanvas" Width="670" Height="260" Background="{DynamicResource FretboardWoodBrush}"/>
                         </Viewbox>
                     </Grid>
                 </Grid>
@@ -64,7 +64,7 @@
         <Border Grid.Row="2" Style="{StaticResource ModeOptionsBorderStyle}">
             <StackPanel>
                 <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="Options" Style="{StaticResource ToolbarLabelTextStyle}"/>
+                    <TextBlock Text="Practice" Style="{StaticResource ToolbarLabelTextStyle}"/>
                     <CheckBox x:Name="ShowNoteNamesCheckBox" Content="Show note labels"
                               ToolTip="Show the target note name beside the staff"
                               Style="{StaticResource ToolbarCheckBoxStyle}"
@@ -78,14 +78,24 @@
                               Unchecked="IncludeAccidentalsCheckBox_Changed"/>
                     <CheckBox x:Name="IncludeOctavesCheckBox" Content="Match octave"
                               ToolTip="Require the played note to be in the same octave as the target"
-                              Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
+                              Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="True"
                               Checked="IncludeOctavesCheckBox_Changed"
                               Unchecked="IncludeOctavesCheckBox_Changed"/>
+                    <CheckBox x:Name="RevealTargetOnMissCheckBox" Content="Reveal target on miss"
+                              ToolTip="Show the correct fret in green alongside a missed note"
+                              Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
+                              Checked="RevealTargetOnMissCheckBox_Changed"
+                              Unchecked="RevealTargetOnMissCheckBox_Changed"/>
+                    <TextBlock Text="Coach" Style="{StaticResource ToolbarLabelTextStyle}" Margin="20,4,4,4"/>
                     <CheckBox x:Name="AdaptivePracticeCheckBox" Content="Adaptive coach"
                               ToolTip="Revisits notes that need work while keeping the exercise varied"
                               Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="False"
                               Checked="AdaptivePracticeCheckBox_Changed"
                               Unchecked="AdaptivePracticeCheckBox_Changed"/>
+                </WrapPanel>
+
+                <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0">
+                    <TextBlock Text="Flow" Style="{StaticResource ToolbarLabelTextStyle}"/>
                     <CheckBox x:Name="AutoAdvanceCheckBox" Content="Auto next"
                               ToolTip="Automatically present the next target after a correct answer"
                               Style="{StaticResource ToolbarCheckBoxStyle}" IsChecked="True"
@@ -98,7 +108,7 @@
                             ValueChanged="NextNoteDelaySlider_ValueChanged"/>
                     <TextBlock x:Name="NextNoteDelayValueText" Text="3s" VerticalAlignment="Center" Foreground="{DynamicResource PanelHeaderBrush}" Margin="4,4,8,4"/>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
                         <Button x:Name="RandomBtn" Content="Random note" Width="124" Click="RandomBtn_Click"
                                 Margin="0,0,8,0" Style="{StaticResource SuccessActionButtonStyle}"/>
                         <Button x:Name="BackToModeSelectionBtn" Content="Modes" Width="104" Click="BackToModeSelectionBtn_Click"
@@ -106,7 +116,7 @@
                     </StackPanel>
                 </WrapPanel>
 
-                <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,6,0,0">
+                <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,2,0,0">
                     <TextBlock Text="Notes" Style="{StaticResource ToolbarLabelTextStyle}"
                                ToolTip="Choose which note names can appear as Student-mode targets"/>
                     <CheckBox x:Name="NoteCCheckBox" Content="C" Tag="0" Style="{StaticResource ToolbarCheckBoxStyle}"

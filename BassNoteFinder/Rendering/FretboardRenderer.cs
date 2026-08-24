@@ -8,11 +8,13 @@ namespace BassNoteFinder.Rendering;
 
 public class FretboardRenderer
 {
-    private const double StringSpacing = 34;
+    private const double StringSpacing = 42;
     private const double FretSpacing = 48;
     private const double NutWidth = 8;
     private const double MarkerSize = 10;
     private const int NumFrets = 12;
+    private const double BoardLeft = 30;
+    private const double BoardTop = 45;
 
     private static readonly int[] OpenNotes = { 43, 38, 33, 28 };
 
@@ -23,8 +25,8 @@ public class FretboardRenderer
     {
         canvas.Children.Clear();
 
-        double x0 = 30;
-        double y0 = 30;
+        double x0 = BoardLeft;
+        double y0 = BoardTop;
 
         double nutEnd = x0 + NutWidth;
 
@@ -127,52 +129,74 @@ public class FretboardRenderer
 
         if (targetNote.HasValue)
         {
-            var (str, fret) = FindNotePosition(targetNote.Value, staffReferenceNote);
-            if (str >= 0)
-            {
-                double sx = nutEnd + (fret - 0.5) * FretSpacing;
-                double sy = y0 + str * StringSpacing;
-                if (fret == 0)
-                {
-                    sx = nutEnd + 0.18 * FretSpacing;
-                }
-
-                var color = highlightColor ?? Color.FromRgb(0, 180, 255);
-                canvas.Children.Add(new Ellipse
-                {
-                    Width = 20, Height = 20,
-                    Fill = new SolidColorBrush(color),
-                    Opacity = 0.8
-                });
-                Canvas.SetLeft(canvas.Children[^1] as Ellipse, sx - 10);
-                Canvas.SetTop(canvas.Children[^1] as Ellipse, sy - 10);
-
-                if (fret > 0)
-                {
-                    var ftb = new TextBlock
-                    {
-                        Text = fret.ToString(),
-                        FontSize = 10,
-                        Foreground = Brushes.White
-                    };
-                    Canvas.SetLeft(ftb, sx - 5);
-                    Canvas.SetTop(ftb, sy + 12);
-                    canvas.Children.Add(ftb);
-                }
-                else
-                {
-                    var ftb = new TextBlock
-                    {
-                        Text = "open",
-                        FontSize = 9,
-                        Foreground = Brushes.LightGray
-                    };
-                    Canvas.SetLeft(ftb, sx - 13);
-                    Canvas.SetTop(ftb, sy + 12);
-                    canvas.Children.Add(ftb);
-                }
-            }
+            DrawNoteMarker(canvas, targetNote.Value, highlightColor ?? Color.FromRgb(0, 180, 255), staffReferenceNote, "✓");
         }
+    }
+
+    public void RenderComparison(
+        Canvas canvas,
+        Note targetNote,
+        Color targetColor,
+        Note playedNote,
+        Color playedColor,
+        Note? staffReferenceNote = null)
+    {
+        Render(canvas);
+        DrawNoteMarker(canvas, targetNote, targetColor, staffReferenceNote, "T");
+        DrawNoteMarker(canvas, playedNote, playedColor, staffReferenceNote, "×");
+    }
+
+    private static void DrawNoteMarker(Canvas canvas, Note note, Color color, Note? staffReferenceNote, string markerText)
+    {
+        var (str, fret) = FindNotePosition(note, staffReferenceNote);
+        if (str < 0)
+        {
+            return;
+        }
+
+        double nutEnd = BoardLeft + NutWidth;
+        double sx = nutEnd + (fret - 0.5) * FretSpacing;
+        double sy = BoardTop + str * StringSpacing;
+        if (fret == 0)
+        {
+            sx = nutEnd + 0.18 * FretSpacing;
+        }
+
+        const double markerDiameter = 30;
+        canvas.Children.Add(new Ellipse
+        {
+            Width = markerDiameter,
+            Height = markerDiameter,
+            Fill = new SolidColorBrush(color),
+            Stroke = Brushes.White,
+            StrokeThickness = 2,
+            Opacity = 0.96
+        });
+        Canvas.SetLeft(canvas.Children[^1] as Ellipse, sx - (markerDiameter / 2));
+        Canvas.SetTop(canvas.Children[^1] as Ellipse, sy - (markerDiameter / 2));
+
+        var markerLabel = new TextBlock
+        {
+            Text = markerText,
+            FontSize = markerText == "×" ? 20 : 15,
+            FontWeight = FontWeights.Bold,
+            Foreground = Brushes.White,
+            Width = markerDiameter,
+            TextAlignment = TextAlignment.Center
+        };
+        Canvas.SetLeft(markerLabel, sx - (markerDiameter / 2));
+        Canvas.SetTop(markerLabel, sy - 11);
+        canvas.Children.Add(markerLabel);
+
+        var fretLabel = new TextBlock
+        {
+            Text = fret > 0 ? fret.ToString() : "open",
+            FontSize = fret > 0 ? 10 : 9,
+            Foreground = fret > 0 ? Brushes.White : Brushes.LightGray
+        };
+        Canvas.SetLeft(fretLabel, fret > 0 ? sx - 5 : sx - 13);
+        Canvas.SetTop(fretLabel, sy + 18);
+        canvas.Children.Add(fretLabel);
     }
 
     public static (int stringIndex, int fret) FindNotePosition(Note note, Note? staffReferenceNote = null)

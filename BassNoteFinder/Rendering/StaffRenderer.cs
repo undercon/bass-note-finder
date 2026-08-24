@@ -35,6 +35,7 @@ public class StaffRenderer
     public bool ShowNoteNames { get; set; }
     public bool IncludeAccidentals { get; set; }
     public bool IncludeOctaves { get; set; }
+    public NoteDisplay.NamingConvention NamingConvention { get; set; } = NoteDisplay.NamingConvention.Standard;
 
     private double CenterX => StaffWidth / 2;
     private double FlatX => CenterX - ColumnOffset;
@@ -231,7 +232,7 @@ public class StaffRenderer
 
         if (ShowNoteNames && !isPreview)
         {
-            string name = NoteDisplay.Format(note, ToAccidentalDisplay(mode), IncludeOctaves);
+            string name = NoteDisplay.Format(note, ToAccidentalDisplay(mode), IncludeOctaves, NamingConvention);
             var nameTb = new TextBlock
             {
                 Text = name,

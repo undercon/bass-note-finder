@@ -28,6 +28,8 @@ public partial class MainWindow : Window
 
     private IGameMode? _activeMode;
     private bool _loadingConfig;
+    private Note? _lastDetectedNote;
+    private double _lastDetectedCents;
 
     public bool ShowDeviation { get; set; }
 
@@ -43,6 +45,7 @@ public partial class MainWindow : Window
         _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
         NormalizeConfig();
         ThemeCombo.ItemsSource = Enum.GetValues<AppTheme>();
+        NotationCombo.ItemsSource = Enum.GetValues<NoteDisplay.NamingConvention>();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
         _audio.PitchDetected += OnPitchDetected;
@@ -103,6 +106,7 @@ public partial class MainWindow : Window
     {
         var view = new TeacherModeView(_config.TeacherMode);
         ApplyThemeResources(view);
+        view.SetNotation(_config.Notation);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         view.SettingsChanged += PersistTeacherModeSettings;
@@ -116,6 +120,7 @@ public partial class MainWindow : Window
     {
         var view = new StudentModeView(_config.StudentMode);
         ApplyThemeResources(view);
+        view.SetNotation(_config.Notation);
         view.BackToMenuRequested += ShowMenu;
         view.IncludeOctavesChanged += (includeOctaves) => _audio.PreferHigherOctave = includeOctaves;
         view.SettingsChanged += PersistStudentModeSettings;
@@ -324,6 +329,23 @@ public partial class MainWindow : Window
         AppConfigStore.Save(_config);
     }
 
+    private void NotationCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (NotationCombo.SelectedItem is not NoteDisplay.NamingConvention notation)
+        {
+            return;
+        }
+
+        _config.Notation = notation;
+        ApplyNotation(notation);
+        if (_loadingConfig || !_enableRuntimeServices)
+        {
+            return;
+        }
+
+        AppConfigStore.Save(_config);
+    }
+
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Space)
@@ -347,9 +369,9 @@ public partial class MainWindow : Window
     {
         Dispatcher.Invoke(() =>
         {
-            DetectedNoteText.Text = ShowDeviation
-                ? $"{detected.FullName} ({centsOff:F0}\u00A2)"
-                : detected.FullName;
+            _lastDetectedNote = detected;
+            _lastDetectedCents = centsOff;
+            UpdateDetectedNoteText();
             DetectedNoteText.SetResourceReference(TextBlock.ForegroundProperty, "PanelHeaderBrush");
             _activeMode?.OnNoteDetected(detected, centsOff);
         });
@@ -387,6 +409,7 @@ public partial class MainWindow : Window
         HarmonicCorrectionCheckBox.IsChecked = _config.UseHarmonicCorrection;
         ShowDeviationCheckBox.IsChecked = _config.ShowDeviation;
         ThemeCombo.SelectedItem = _config.Theme;
+        NotationCombo.SelectedItem = _config.Notation;
         ShowDeviation = _config.ShowDeviation;
         _detectionPipeline.UseHarmonicCorrection = _config.UseHarmonicCorrection;
         UpdateThresholdDisplay(ThresholdSlider.Value);
@@ -415,6 +438,37 @@ public partial class MainWindow : Window
     private void ApplyThemeResources(FrameworkElement element)
     {
         ThemeManager.ApplyResources(element.Resources, ThemeManager.Resolve(_config.Theme));
+    }
+
+    private void ApplyNotation(NoteDisplay.NamingConvention notation)
+    {
+        if (_activeMode is TeacherModeView teacherMode)
+        {
+            teacherMode.SetNotation(notation);
+        }
+        else if (_activeMode is StudentModeView studentMode)
+        {
+            studentMode.SetNotation(notation);
+        }
+
+        UpdateDetectedNoteText();
+    }
+
+    private void UpdateDetectedNoteText()
+    {
+        if (!_lastDetectedNote.HasValue)
+        {
+            return;
+        }
+
+        string noteDisplay = NoteDisplay.Format(
+            _lastDetectedNote.Value,
+            NoteDisplay.AccidentalDisplay.Natural,
+            includeOctave: true,
+            _config.Notation);
+        DetectedNoteText.Text = ShowDeviation
+            ? $"{noteDisplay} ({_lastDetectedCents:F0}\u00A2)"
+            : noteDisplay;
     }
 
     private void PersistSelectedInputDevice()

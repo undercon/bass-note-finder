@@ -18,7 +18,9 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Languages/translation-template.json" CopyToOutputDirectory="PreserveNewest"
+    <Content Include="Languages/translation-template.json;Languages/nl.json" CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
+    <Content Include="../docs/language-packs.md" Link="docs/language-packs.md" CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
   </ItemGroup>
 

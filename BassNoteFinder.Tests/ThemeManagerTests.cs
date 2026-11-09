@@ -72,7 +72,7 @@ public class ThemeManagerTests
     }
 
     [Fact]
-    public void MainWindow_LanguagePickerOffersGreekAndKeepsTheSelectedLanguage()
+    public void MainWindow_LanguagePickerOffersGreekAndDutchAndKeepsTheSelectedLanguage()
     {
         string[] choices = TestHelpers.RunOnSta(() =>
         {
@@ -88,6 +88,7 @@ public class ThemeManagerTests
             return names;
         });
 
-        Assert.Equal(new[] { "System", "English", "Ελληνικά" }, choices);
+        Assert.Equal(new[] { "System", "English", "Ελληνικά" }, choices.Take(3));
+        Assert.Contains("Nederlands", choices);
     }
 }

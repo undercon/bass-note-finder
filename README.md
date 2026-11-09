@@ -70,7 +70,7 @@ Most settings are remembered between launches, including footer controls, Teache
 
 The footer theme picker supports Dark, Light, and System. System follows the operating-system color palette exposed by the UI framework.
 The notation picker switches displayed note names between Standard (C, C♯, B♭) and Solfège (Do, Do♯, Si♭).
-The language picker includes English, Greek, and any JSON translation packs in the `Languages` folder next to the executable. See [Add a language](RELEASE_README.md#add-a-language) for the template and steps.
+The language picker includes English, Greek, Dutch, and any custom JSON packs in the `Languages` folder next to the executable. See [Create a language pack](docs/language-packs.md) for the format and steps.
 
 ## Release Automation (GitHub Actions)
 

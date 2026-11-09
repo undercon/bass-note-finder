@@ -25,12 +25,7 @@ Useful controls:
 
 ## Add a language
 
-1. Open the `Languages` folder next to `BassNoteFinder.exe`.
-2. Copy `translation-template.json` to a new file in that folder, such as `nl.json`.
-3. Fill in `name` with the label you want to see in the picker, such as `Nederlands`. Translate the values under `strings` and keep the keys and placeholders such as `{0}` and `{1}`.
-4. Save as UTF-8, restart Bass Note Finder, and select the pack under **Language** in the footer.
-
-You can omit entries or leave their values blank to use the English text. Keep the filename stable so the app remembers your selection.
+Choose English, Greek, or Dutch from the **Language** picker in the footer. To create another translation, use the template in the `Languages` folder and follow the [language pack guide](docs/language-packs.md).
 
 ## Disclaimer
 

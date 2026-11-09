@@ -14,13 +14,13 @@ Current app modes:
 
 ### Run from release package
 - Windows 10/11 x64
-- No .NET runtime install required (self-contained release).
+- Microsoft .NET Desktop Runtime 10.x (Windows x64).
 
 ## Using the Release Package
 
-1. Download `BassNoteFinder-<tag>-win-x64.zip` from GitHub Releases.
+1. Download `BassNoteFinder-<tag>-win-x64-framework-dependent.zip` from GitHub Releases.
 2. Extract the zip to a folder you can write to (for app settings persistence).
-3. Run `BassNoteFinder.exe`.
+3. Run `BassNoteFinder.exe`. If Windows shows a .NET download prompt, install the **.NET Desktop Runtime 10.x (Windows x64)** and then open the app again. [Microsoft .NET 10 downloads](https://dotnet.microsoft.com/download/dotnet/10.0)
 4. Choose your input device, then click `Start Mic`.
 
 First-run defaults:
@@ -82,12 +82,11 @@ Two workflows are included:
 
 - `.github/workflows/release.yml`
   - Runs on tag push.
-  - Restores and builds **app project only** in `Release` configuration.
-  - Publishes both a self-contained `win-x64` app and a smaller framework-dependent `win-x64-framework-dependent` app.
-  - Zips outputs and creates/updates a GitHub Release.
+  - Uses `scripts/package-windows-release.ps1` to publish and package the app as a framework-dependent Windows x64 build.
+  - Attaches the ZIP to a GitHub Release.
   - Excludes test project packaging and test execution (tests are CI-only).
   - Excludes PDB symbols from release output.
-  - Includes this `README.md` in the release zip.
+  - Includes the quick-start guide and third-party notices in the ZIP.
   - Stamps release builds from the pushed tag value (supports `v` prefix).
 
 ## Versioning
@@ -106,19 +105,13 @@ git tag 0.2
 git push origin 0.2
 ```
 
-The workflow will attach artifacts named like:
-
-`BassNoteFinder-<tag>-win-x64.zip`
-
-`BassNoteFinder-<tag>-win-x64-framework-dependent.zip`
+The workflow attaches `BassNoteFinder-<tag>-win-x64-framework-dependent.zip`.
 
 ## Packaging Notes
 
 - Only the app project is published (`BassNoteFinder/BassNoteFinder.csproj`), so test binaries are not included in release artifacts.
-- Release publish settings use standard `dotnet publish` options and generate:
-  - a self-contained single-file executable for Windows x64 (no runtime prerequisite)
-  - a framework-dependent single-file executable for Windows x64 (requires .NET Desktop Runtime 10.x x64)
-- `README.md` is copied into the packaged artifact from repo root as the single source of truth.
+- The ZIP contains a framework-dependent single-file executable for Windows x64 and its companion files.
+- The package includes `RELEASE_README.md` as `README.md`, plus the [third-party notices](THIRD-PARTY-NOTICES.txt) and license texts for NAudio and the .NET executable host.
 
 ## Disclaimer
 

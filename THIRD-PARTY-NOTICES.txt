@@ -1,0 +1,16 @@
+Bass Note Finder third-party notices
+
+NAudio 2.3.0
+-------------
+The Windows package includes NAudio, NAudio.Asio, NAudio.Core, NAudio.Midi,
+NAudio.Wasapi, NAudio.WinForms, and NAudio.WinMM. See licenses/NAudio-2.3.0.txt
+for the copyright and MIT license text from the upstream release.
+Source: https://github.com/naudio/NAudio/tree/v2.3.0
+
+Microsoft .NET executable host
+------------------------------
+BassNoteFinder.exe includes the Windows x64 .NET launcher. The release package
+includes licenses/DotNet-AppHost-LICENSE.TXT and
+licenses/DotNet-AppHost-THIRD-PARTY-NOTICES.TXT from the matching Microsoft
+host package.
+Source: https://www.nuget.org/packages/Microsoft.NETCore.App.Host.win-x64

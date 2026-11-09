@@ -80,12 +80,17 @@ public class ThemeManagerTests
             var languageCombo = (ComboBox)window.FindName("LanguageCombo");
             var items = languageCombo.Items.Cast<object>().ToArray();
 
-            languageCombo.SelectedItem = items.Single(item => item.ToString() == "Ελληνικά");
-            string[] names = items.Select(item => item.ToString()!).ToArray();
-
-            Assert.Equal("Ελληνικά", languageCombo.SelectedItem?.ToString());
-            window.Close();
-            return names;
+            try
+            {
+                languageCombo.SelectedItem = items.Single(item => item.ToString() == "Ελληνικά");
+                Assert.Equal("Ελληνικά", languageCombo.SelectedItem?.ToString());
+                return items.Select(item => item.ToString()!).ToArray();
+            }
+            finally
+            {
+                languageCombo.SelectedItem = languageCombo.Items.Cast<object>().Single(item => item.ToString() == "English");
+                window.Close();
+            }
         });
 
         Assert.Equal(new[] { "System", "English", "Ελληνικά" }, choices.Take(3));

@@ -24,7 +24,7 @@ public class LocalizationManagerTests
     [Fact]
     public void Apply_WithoutWpfApplication_IsSafe()
     {
-        LocalizationManager.Apply(AppLanguage.Greek);
+        LocalizationManager.Apply(AppLanguage.English);
     }
 
     [Theory]
@@ -97,6 +97,7 @@ public class LocalizationManagerTests
             }
             finally
             {
+                LocalizationManager.Apply(AppLanguage.English);
                 application.Shutdown();
                 File.Delete(packPath);
                 File.Delete(invalidPath);

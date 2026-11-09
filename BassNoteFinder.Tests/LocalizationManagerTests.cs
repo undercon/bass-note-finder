@@ -89,7 +89,7 @@ public class LocalizationManagerTests
                 Assert.Equal("Έναρξη μικροφώνου", LocalizationManager.GetString("StartMic"));
                 picker.SelectedItem = picker.Items.Cast<object>().Single(item => item.ToString() == "Nederlands");
                 Assert.Equal("Notenbalk", LocalizationManager.GetString("Staff"));
-                Assert.Equal("Goed! Je speelde E. Volgende noot over 3 s…",
+                Assert.Equal("Goed! Je speelde E. De volgende noot komt over 3 s.",
                     string.Format(LocalizationManager.GetString("CorrectStudentNext"), "E", "3"));
                 picker.SelectedItem = picker.Items.Cast<object>().Single(item => item.ToString() == "English");
                 Assert.Equal("Start Mic", LocalizationManager.GetString("StartMic"));

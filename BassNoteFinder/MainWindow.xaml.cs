@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     private readonly AudioCaptureService _audio;
     private readonly StableNoteDetectionPipeline _detectionPipeline;
     private readonly AppConfig _config;
+    private readonly IReadOnlyList<LocalizationManager.LanguagePack> _languagePacks;
     private readonly InitialViewMode _initialViewMode;
     private readonly bool _enableRuntimeServices;
 
@@ -48,8 +49,9 @@ public partial class MainWindow : Window
         _enableRuntimeServices = enableRuntimeServices;
         InitializeComponent();
         _config = enableRuntimeServices ? AppConfigStore.Load() : new AppConfig();
+        _languagePacks = LocalizationManager.LoadPacks();
         NormalizeConfig();
-        LocalizationManager.Apply(_config.Language);
+        ApplyLanguage();
         RefreshLocalizedPickers();
         _audio = new AudioCaptureService();
         _detectionPipeline = new StableNoteDetectionPipeline();
@@ -183,6 +185,12 @@ public partial class MainWindow : Window
 
     private void NormalizeConfig()
     {
+        _config.Language = _config.Language?.ToUpperInvariant() switch
+        {
+            null or "SYSTEM" => AppLanguage.System,
+            "GREEK" => AppLanguage.Greek,
+            _ => FindLanguagePack()?.Id ?? AppLanguage.English
+        };
         _config.TeacherMode ??= new TeacherModeSettings();
         _config.StudentMode ??= new StudentModeSettings();
 
@@ -348,13 +356,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (LanguageCombo.SelectedItem is not LocalizedOption<AppLanguage> option)
+        if (LanguageCombo.SelectedItem is not LocalizedOption<string> option)
         {
             return;
         }
 
         _config.Language = option.Value;
-        LocalizationManager.Apply(option.Value);
+        ApplyLanguage();
         RefreshLocalizedPickers();
         ShowMenu();
         if (!_loadingConfig && _enableRuntimeServices)
@@ -426,7 +434,6 @@ public partial class MainWindow : Window
         ShowDeviationCheckBox.IsChecked = _config.ShowDeviation;
         ThemeCombo.SelectedItem = ThemeCombo.Items.Cast<LocalizedOption<AppTheme>>().First(option => option.Value == _config.Theme);
         NotationCombo.SelectedItem = NotationCombo.Items.Cast<LocalizedOption<NoteDisplay.NamingConvention>>().First(option => option.Value == _config.Notation);
-        LanguageCombo.SelectedItem = LanguageCombo.Items.Cast<LocalizedOption<AppLanguage>>().First(option => option.Value == _config.Language);
         ShowDeviation = _config.ShowDeviation;
         _detectionPipeline.UseHarmonicCorrection = true;
         UpdateThresholdDisplay(ThresholdSlider.Value);
@@ -467,17 +474,25 @@ public partial class MainWindow : Window
             new LocalizedOption<NoteDisplay.NamingConvention>(NoteDisplay.NamingConvention.Standard, Text("Standard")),
             new LocalizedOption<NoteDisplay.NamingConvention>(NoteDisplay.NamingConvention.Solfege, Text("Solfege"))
         };
-        LanguageCombo.ItemsSource = new[]
-        {
-            new LocalizedOption<AppLanguage>(AppLanguage.System, Text("System")),
-            new LocalizedOption<AppLanguage>(AppLanguage.English, Text("English")),
-            new LocalizedOption<AppLanguage>(AppLanguage.Greek, Text("Greek"))
-        };
+        LocalizedOption<string>[] builtInLanguages =
+        [
+            new(AppLanguage.System, Text("System")),
+            new(AppLanguage.English, Text("English")),
+            new(AppLanguage.Greek, Text("Greek"))
+        ];
+        var languageOptions = builtInLanguages.Concat(
+            _languagePacks.Select(pack => new LocalizedOption<string>(pack.Id, pack.Name))).ToArray();
+        LanguageCombo.ItemsSource = languageOptions;
         ThemeCombo.SelectedItem = ThemeCombo.Items.Cast<LocalizedOption<AppTheme>>().First(option => option.Value == _config.Theme);
         NotationCombo.SelectedItem = NotationCombo.Items.Cast<LocalizedOption<NoteDisplay.NamingConvention>>().First(option => option.Value == _config.Notation);
-        LanguageCombo.SelectedItem = LanguageCombo.Items.Cast<LocalizedOption<AppLanguage>>().First(option => option.Value == _config.Language);
+        LanguageCombo.SelectedItem = languageOptions.First(option => option.Value == _config.Language);
         _loadingConfig = wasLoadingConfig;
     }
+
+    private LocalizationManager.LanguagePack? FindLanguagePack() =>
+        _languagePacks.FirstOrDefault(pack => string.Equals(pack.Id, _config.Language, StringComparison.OrdinalIgnoreCase));
+
+    private void ApplyLanguage() => LocalizationManager.Apply(_config.Language, FindLanguagePack());
 
     private string Text(string key) => LocalizationManager.GetString(key);
 

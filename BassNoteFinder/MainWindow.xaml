@@ -96,7 +96,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4">
                     <TextBlock Text="{DynamicResource Language}" VerticalAlignment="Center"
                                Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
-                    <ComboBox x:Name="LanguageCombo" Width="104"
+                    <ComboBox x:Name="LanguageCombo" MinWidth="104" MaxWidth="200"
                               ToolTip="{DynamicResource TooltipLanguage}"
                               SelectionChanged="LanguageCombo_SelectionChanged"
                               Style="{StaticResource DarkInputComboBoxStyle}"/>

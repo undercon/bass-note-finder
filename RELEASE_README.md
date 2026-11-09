@@ -15,13 +15,22 @@
   - Play that note on bass.
 
 - **Student Mode**
-  - The app assigns random target notes.
+  - Choose Random, Gentle, Adaptive, or Shuffle in the Coach dropdown.
   - On correct note detection, it can auto-advance.
 
 Useful controls:
 - `Gate`: raises/lowers noise threshold.
 - `Bass Harmonics`: helps reduce octave-jump false positives.
 - `Deviation`: shows cents offset in detected note display.
+
+## Add a language
+
+1. Open the `Languages` folder next to `BassNoteFinder.exe`.
+2. Copy `translation-template.json` to a new file in that folder, such as `nl.json`.
+3. Fill in `name` with the label you want to see in the picker, such as `Nederlands`. Translate the values under `strings` and keep the keys and placeholders such as `{0}` and `{1}`.
+4. Save as UTF-8, restart Bass Note Finder, and select the pack under **Language** in the footer.
+
+You can omit entries or leave their values blank to use the English text. Keep the filename stable so the app remembers your selection.
 
 ## Disclaimer
 

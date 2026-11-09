@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using System.Windows.Controls;
 using BassNoteFinder.MusicTheory;
 using BassNoteFinder.Rendering;
@@ -172,7 +173,7 @@ public class ModeIntegrationTests
                 IncludeAccidentals = true,
                 MatchOctave = true,
                 RevealTargetOnMiss = true,
-                AdaptivePractice = true,
+                Coach = PracticeCoach.Shuffle,
                 AutoAdvance = false,
                 NextNoteDelaySeconds = 4.5,
                 AvailablePitchClasses = [4, 7]
@@ -182,7 +183,7 @@ public class ModeIntegrationTests
             Assert.True(((CheckBox)view.FindName("IncludeAccidentalsCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("IncludeOctavesCheckBox")).IsChecked);
             Assert.True(((CheckBox)view.FindName("RevealTargetOnMissCheckBox")).IsChecked);
-            Assert.True(((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked);
+            Assert.Equal(PracticeCoach.Shuffle, ((ComboBox)view.FindName("CoachCombo")).SelectedValue);
             Assert.False(((CheckBox)view.FindName("AutoAdvanceCheckBox")).IsChecked);
             Assert.Equal(4.5, ((Slider)view.FindName("NextNoteDelaySlider")).Value);
             Assert.True(((CheckBox)view.FindName("NoteECheckBox")).IsChecked);
@@ -226,21 +227,103 @@ public class ModeIntegrationTests
         });
     }
 
-    [Fact]
-    public void StudentMode_AdaptiveCoachToggle_RaisesSettingsChanged()
+    [Theory]
+    [InlineData(PracticeCoach.Random)]
+    [InlineData(PracticeCoach.Gentle)]
+    [InlineData(PracticeCoach.Adaptive)]
+    [InlineData(PracticeCoach.Shuffle)]
+    public void StudentMode_ChangingCoach_RaisesSettingsChanged(PracticeCoach coach)
     {
-        bool? adaptivePractice = null;
+        PracticeCoach? selected = null;
 
         RunOnSta(() =>
         {
-            var view = new StudentModeView();
-            view.SettingsChanged += settings => adaptivePractice = settings.AdaptivePractice;
+            var view = new StudentModeView(new StudentModeSettings
+            {
+                Coach = coach == PracticeCoach.Random ? PracticeCoach.Shuffle : PracticeCoach.Random
+            });
+            view.SettingsChanged += settings => selected = settings.Coach;
 
-            ((CheckBox)view.FindName("AdaptivePracticeCheckBox")).IsChecked = true;
+            ((ComboBox)view.FindName("CoachCombo")).SelectedValue = coach;
             return 0;
         });
 
-        Assert.True(adaptivePractice);
+        Assert.Equal(coach, selected);
+    }
+
+    [Theory]
+    [InlineData("{}", PracticeCoach.Random)]
+    [InlineData("{\"AdaptivePractice\":false}", PracticeCoach.Random)]
+    [InlineData("{\"AdaptivePractice\":true}", PracticeCoach.Adaptive)]
+    [InlineData("{\"Coach\":\"Shuffle\",\"AdaptivePractice\":true}", PracticeCoach.Shuffle)]
+    public void StudentModeSettings_LoadsLegacyCoachPreference(string json, PracticeCoach expected)
+    {
+        var settings = JsonSerializer.Deserialize<StudentModeSettings>(json)!;
+        Assert.Equal(expected, settings.Coach);
+
+        string saved = JsonSerializer.Serialize(settings);
+        Assert.DoesNotContain("AdaptivePractice", saved);
+        Assert.Equal(expected, JsonSerializer.Deserialize<StudentModeSettings>(saved)!.Coach);
+    }
+
+    [Fact]
+    public void StudentMode_Shuffle_CoversEnabledPitchClassesWithoutRepeatingAtRoundBoundary()
+    {
+        RunOnSta(() =>
+        {
+            int[] enabled = [0, 4, 7];
+            var view = new StudentModeView(new StudentModeSettings
+            {
+                Coach = PracticeCoach.Shuffle,
+                AvailablePitchClasses = enabled
+            });
+            view.OnActivate();
+
+            int? previous = null;
+            for (int round = 0; round < 5; round++)
+            {
+                var actual = new HashSet<int>();
+                foreach (int _ in enabled)
+                {
+                    int pitchClass = GetStudentTarget(view).PitchClass;
+                    Assert.NotEqual(previous, pitchClass);
+                    Assert.True(actual.Add(pitchClass));
+                    previous = pitchClass;
+                    view.OnSpacePressed();
+                }
+                Assert.Equal(enabled, actual.Order().ToArray());
+            }
+            return 0;
+        });
+    }
+
+    [Fact]
+    public void StudentMode_Gentle_PrioritizesAMissedNoteInTheNextRound()
+    {
+        RunOnSta(() =>
+        {
+            int[] enabled = [0, 4, 7];
+            var view = new StudentModeView(new StudentModeSettings
+            {
+                Coach = PracticeCoach.Gentle,
+                AutoAdvance = false,
+                AvailablePitchClasses = enabled
+            });
+            view.OnActivate();
+
+            Note missed = GetStudentTarget(view);
+            view.OnNoteDetected(new Note(33), 0);
+            view.OnNoteDetected(missed, 0);
+            view.OnSpacePressed();
+            Note second = GetStudentTarget(view);
+            view.OnSpacePressed();
+            Note third = GetStudentTarget(view);
+            Assert.Equal(enabled, new[] { missed.PitchClass, second.PitchClass, third.PitchClass }.Order().ToArray());
+            view.OnSpacePressed();
+
+            Assert.Equal(missed.PitchClass, GetStudentTarget(view).PitchClass);
+            return 0;
+        });
     }
 
     [Fact]
@@ -292,6 +375,10 @@ public class ModeIntegrationTests
         Assert.NotNull(select);
         select!.Invoke(view, [note, mode]);
     }
+
+    private static Note GetStudentTarget(StudentModeView view) =>
+        (Note)typeof(StudentModeView).GetField("_currentNote", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(view)!;
 
     private static void SetIncludeOctaves(UserControl view, bool enabled)
     {

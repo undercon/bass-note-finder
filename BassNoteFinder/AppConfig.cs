@@ -6,8 +6,8 @@ namespace BassNoteFinder;
 
 public class AppConfig
 {
-    [JsonConverter(typeof(JsonStringEnumConverter<AppLanguage>))]
-    public AppLanguage Language { get; set; } = AppLanguage.System;
+    [JsonConverter(typeof(LanguagePreferenceConverter))]
+    public string Language { get; set; } = AppLanguage.System;
     [JsonConverter(typeof(JsonStringEnumConverter<AppTheme>))]
     public AppTheme Theme { get; set; } = AppTheme.System;
     [JsonConverter(typeof(JsonStringEnumConverter<NoteDisplay.NamingConvention>))]
@@ -32,14 +32,35 @@ public class TeacherModeSettings
     public bool RevealTargetOnMiss { get; set; }
 }
 
+public enum PracticeCoach
+{
+    Random,
+    Gentle,
+    Adaptive,
+    Shuffle
+}
+
 public class StudentModeSettings : TeacherModeSettings
 {
+    private PracticeCoach? _coach;
+    private bool _legacyAdaptivePractice;
+
     public StudentModeSettings()
     {
         MatchOctave = true;
     }
 
-    public bool AdaptivePractice { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter<PracticeCoach>))]
+    public PracticeCoach Coach
+    {
+        get => _coach ?? (_legacyAdaptivePractice ? PracticeCoach.Adaptive : PracticeCoach.Random);
+        set => _coach = value;
+    }
+
+    // Read the old setting when no explicit coach was saved.
+    [JsonInclude]
+    private bool AdaptivePractice { set => _legacyAdaptivePractice = value; }
+
     public bool AutoAdvance { get; set; } = true;
     public double NextNoteDelaySeconds { get; set; } = 3;
     public int[] AvailablePitchClasses { get; set; } = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];

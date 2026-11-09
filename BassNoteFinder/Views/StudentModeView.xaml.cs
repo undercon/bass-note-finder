@@ -19,6 +19,7 @@ public partial class StudentModeView : UserControl, IGameMode
     private readonly FretboardRenderer _fretboardRenderer = new();
     private readonly DispatcherTimer _nextNoteTimer;
     private readonly AdaptivePracticeEngine _adaptivePractice = new();
+    private readonly PracticeRound _practiceRound = new();
 
     private Note? _currentNote;
     private StaffRenderer.AccidentalMode _currentMode = StaffRenderer.AccidentalMode.Natural;
@@ -81,7 +82,7 @@ public partial class StudentModeView : UserControl, IGameMode
 
         if (evaluatedNote.MidiNote == target.MidiNote)
         {
-            RecordAdaptiveResult(target);
+            RecordPracticeResult(target);
             SetFretboardState(FretboardState.CelebratingCorrect, target);
             if (IsAutoAdvanceEnabled)
             {
@@ -102,7 +103,7 @@ public partial class StudentModeView : UserControl, IGameMode
         }
         else
         {
-            if (IsAdaptivePracticeEnabled && !_targetResultRecorded)
+            if (!_targetResultRecorded)
             {
                 _mistakesOnCurrentTarget++;
             }
@@ -192,22 +193,15 @@ public partial class StudentModeView : UserControl, IGameMode
         NotifySettingsChanged();
     }
 
-    private void AdaptivePracticeCheckBox_Changed(object sender, RoutedEventArgs e)
+    private void CoachCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_loadingSettings)
         {
             return;
         }
 
-        if (IsAdaptivePracticeEnabled && _currentNote.HasValue)
-        {
-            BeginTrackingCurrentTarget();
-        }
-        else
-        {
-            _targetResultRecorded = true;
-        }
-
+        _targetResultRecorded = true;
+        _practiceRound.Reset(_currentNote?.PitchClass);
         NotifySettingsChanged();
     }
 
@@ -244,14 +238,15 @@ public partial class StudentModeView : UserControl, IGameMode
         }
 
         HashSet<int> availablePitchClasses = GetPlayablePitchClasses();
-        IReadOnlySet<int> targetPitchClasses = availablePitchClasses;
-        if (IsAdaptivePracticeEnabled)
+        int? coachedPitchClass = SelectedCoach switch
         {
-            targetPitchClasses = new HashSet<int>
-            {
-                _adaptivePractice.ChooseNext(availablePitchClasses)
-            };
-        }
+            PracticeCoach.Adaptive => _adaptivePractice.ChooseNext(availablePitchClasses),
+            PracticeCoach.Gentle or PracticeCoach.Shuffle => _practiceRound.ChooseNext(availablePitchClasses),
+            _ => null
+        };
+        IReadOnlySet<int> targetPitchClasses = coachedPitchClass is int pitchClass
+            ? new HashSet<int> { pitchClass }
+            : availablePitchClasses;
 
         if (_staff.IncludeAccidentals)
         {
@@ -395,7 +390,7 @@ public partial class StudentModeView : UserControl, IGameMode
     }
 
     private bool IsAutoAdvanceEnabled => AutoAdvanceCheckBox.IsChecked == true;
-    private bool IsAdaptivePracticeEnabled => AdaptivePracticeCheckBox.IsChecked == true;
+    private PracticeCoach SelectedCoach => CoachCombo.SelectedValue is PracticeCoach coach ? coach : PracticeCoach.Random;
 
     private void SyncNextNoteDelayUi()
     {
@@ -420,7 +415,7 @@ public partial class StudentModeView : UserControl, IGameMode
         IncludeAccidentalsCheckBox.IsChecked = settings.IncludeAccidentals;
         IncludeOctavesCheckBox.IsChecked = settings.MatchOctave;
         RevealTargetOnMissCheckBox.IsChecked = settings.RevealTargetOnMiss;
-        AdaptivePracticeCheckBox.IsChecked = settings.AdaptivePractice;
+        CoachCombo.SelectedValue = Enum.IsDefined(settings.Coach) ? settings.Coach : PracticeCoach.Random;
         AutoAdvanceCheckBox.IsChecked = settings.AutoAdvance;
         NextNoteDelaySlider.Value = Math.Clamp(settings.NextNoteDelaySeconds, NextNoteDelaySlider.Minimum, NextNoteDelaySlider.Maximum);
         ApplyAvailablePitchClasses(settings.AvailablePitchClasses);
@@ -447,7 +442,7 @@ public partial class StudentModeView : UserControl, IGameMode
             IncludeAccidentals = IncludeAccidentalsCheckBox.IsChecked == true,
             MatchOctave = IncludeOctavesCheckBox.IsChecked == true,
             RevealTargetOnMiss = RevealTargetOnMissCheckBox.IsChecked == true,
-            AdaptivePractice = IsAdaptivePracticeEnabled,
+            Coach = SelectedCoach,
             AutoAdvance = AutoAdvanceCheckBox.IsChecked == true,
             NextNoteDelaySeconds = NextNoteDelaySlider.Value,
             AvailablePitchClasses = GetAvailablePitchClasses().Order().ToArray()
@@ -480,26 +475,33 @@ public partial class StudentModeView : UserControl, IGameMode
     {
         _targetStartedTimestamp = Stopwatch.GetTimestamp();
         _mistakesOnCurrentTarget = 0;
-        _targetResultRecorded = !IsAdaptivePracticeEnabled;
+        _targetResultRecorded = SelectedCoach is not (PracticeCoach.Adaptive or PracticeCoach.Gentle);
     }
 
-    private void RecordAdaptiveResult(Note target)
+    private void RecordPracticeResult(Note target)
     {
-        if (!IsAdaptivePracticeEnabled || _targetResultRecorded)
+        if (_targetResultRecorded)
         {
             return;
         }
 
-        _adaptivePractice.RecordResult(
-            target.PitchClass,
-            _mistakesOnCurrentTarget,
-            Stopwatch.GetElapsedTime(_targetStartedTimestamp));
+        if (SelectedCoach == PracticeCoach.Adaptive)
+        {
+            _adaptivePractice.RecordResult(
+                target.PitchClass,
+                _mistakesOnCurrentTarget,
+                Stopwatch.GetElapsedTime(_targetStartedTimestamp));
+        }
+        else if (_mistakesOnCurrentTarget > 0)
+        {
+            _practiceRound.RecordMiss(target.PitchClass);
+        }
         _targetResultRecorded = true;
     }
 
     private void RecordSkippedAdaptiveTarget()
     {
-        if (!IsAdaptivePracticeEnabled || _targetResultRecorded || !_currentNote.HasValue)
+        if (SelectedCoach != PracticeCoach.Adaptive || _targetResultRecorded || !_currentNote.HasValue)
         {
             return;
         }
@@ -513,7 +515,7 @@ public partial class StudentModeView : UserControl, IGameMode
 
     private void ApplyAvailablePitchClasses(IEnumerable<int>? pitchClasses)
     {
-        var available = (pitchClasses ?? Enumerable.Range(0, 12)).ToHashSet();
+        var available = pitchClasses?.Where(pitchClass => pitchClass is >= 0 and <= 11).ToHashSet() ?? [];
         if (available.Count == 0)
         {
             available = Enumerable.Range(0, 12).ToHashSet();
